@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planning de Repas</title>
+    <link rel="stylesheet" href="planning.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar Recettes -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2>Recettes</h2>
+                <button class="toggle-btn" id="toggleSidebar">◀</button>
+            </div>
+            <div class="recipes-list" id="recipesList">
+                <div class="loading">Chargement...</div>
+            </div>
+        </aside>
+
+        <!-- Planning -->
+        <main class="planning">
+            <h1>Planning de la Semaine</h1>
+            <div class="calendar-grid" id="calendar">
+                <!-- Généré dynamiquement -->
+            </div>
+        </main>
+
+        <!-- Chat Bot -->
+        <aside class="chat-sidebar">
+            <div class="chat-container">
+                <div class="chat-header">
+                    <h3>Assistant Bot</h3>
+                </div>
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message bot-message">
+                        <div class="message-content">
+                            <p>Bonjour ! Je peux vous aider à créer des recettes.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="chat-input-container">
+                    <form class="chat-input-form" id="chatForm">
+                        <input
+                            type="text"
+                            class="chat-input"
+                            id="messageInput"
+                            placeholder="Votre message..."
+                            autocomplete="off"
+                        />
+                        <button type="submit" class="send-button">➤</button>
+                    </form>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Popup pour les détails de recette -->
+    <div class="recipe-popup" id="recipePopup">
+        <div class="popup-content">
+            <button class="close-popup" id="closePopup">×</button>
+            <h2 id="popupTitle"></h2>
+            <div id="popupBody"></div>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="planning.js"></script>
+</body>
+</html>
