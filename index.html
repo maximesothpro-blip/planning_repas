@@ -87,6 +87,7 @@
                     <div class="shopping-header">
                         <button class="generate-list-btn" id="generateList">Générer la liste</button>
                         <button class="settings-btn" id="settingsBtn" title="Paramètres">⚙️</button>
+                        <button class="clear-list-btn" id="clearList" title="Vider la liste">🗑️</button>
                         <button class="export-list-btn" id="exportList">Exporter</button>
                     </div>
                     <div class="shopping-content" id="shoppingContent">
@@ -115,8 +116,19 @@
             <div class="settings-layout">
                 <!-- Colonne gauche : Planning -->
                 <div class="settings-planning">
-                    <h3>Planning de la semaine</h3>
-                    <p class="settings-help">Cliquez sur un repas pour l'inclure (vert) ou l'exclure (rouge)</p>
+                    <div class="settings-planning-header">
+                        <h3>Planning de la semaine</h3>
+                        <div class="settings-week-nav">
+                            <button class="settings-week-btn" id="settingsPrevWeek">←</button>
+                            <span class="settings-week-display" id="settingsWeekDisplay">Semaine 46 - 2025</span>
+                            <button class="settings-week-btn" id="settingsNextWeek">→</button>
+                        </div>
+                    </div>
+                    <p class="settings-help">Cliquez sur un repas pour l'inclure (vert) ou l'exclure (rouge). <strong>Jaune</strong> = autres semaines.</p>
+                    <div class="settings-actions">
+                        <button class="settings-select-btn" id="settingsSelectAll">Tout inclure</button>
+                        <button class="settings-select-btn" id="settingsSelectNone">Tout exclure</button>
+                    </div>
                     <div class="settings-calendar" id="settingsCalendar">
                         <!-- Généré dynamiquement -->
                     </div>
@@ -138,7 +150,7 @@
     </div>
 
     <!-- Version -->
-    <div class="version-info">v2.5-step5</div>
+    <div class="version-info">v2.6-step6</div>
 
     <script src="config.js"></script>
     <script src="planning.js"></script>

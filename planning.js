@@ -4,9 +4,12 @@ const API_URL = window.BACKEND_API_URL || 'http://localhost:3000';
 // État global
 let recipes = [];
 let planning = [];
+let allWeeksPlanning = {}; // Store planning for all weeks { 'week-year': [...] }
 let shoppingList = [];
 let currentWeek = getCurrentWeek();
 let currentYear = new Date().getFullYear();
+let settingsWeek = currentWeek; // Week currently displayed in settings popup
+let settingsYear = currentYear;
 let mealInclusions = {}; // Track which meals are included (green) or excluded (red)
 
 // Éléments DOM
@@ -27,12 +30,18 @@ const weekDisplay = document.getElementById('weekDisplay');
 const searchRecipes = document.getElementById('searchRecipes');
 const generateListBtn = document.getElementById('generateList');
 const exportListBtn = document.getElementById('exportList');
+const clearListBtn = document.getElementById('clearList');
 const shoppingContent = document.getElementById('shoppingContent');
 const settingsBtn = document.getElementById('settingsBtn');
 const shoppingSettingsPopup = document.getElementById('shoppingSettingsPopup');
 const closeSettingsPopup = document.getElementById('closeSettingsPopup');
 const settingsCalendar = document.getElementById('settingsCalendar');
 const settingsListContent = document.getElementById('settingsListContent');
+const settingsWeekDisplay = document.getElementById('settingsWeekDisplay');
+const settingsPrevWeek = document.getElementById('settingsPrevWeek');
+const settingsNextWeek = document.getElementById('settingsNextWeek');
+const settingsSelectAll = document.getElementById('settingsSelectAll');
+const settingsSelectNone = document.getElementById('settingsSelectNone');
 const applySettings = document.getElementById('applySettings');
 
 // Jours de la semaine
@@ -80,11 +89,37 @@ async function loadPlanning() {
 
         if (data.success) {
             planning = data.planning;
+            allWeeksPlanning[`${currentWeek}-${currentYear}`] = data.planning;
             console.log(`Loaded ${planning.length} planned meals for week ${currentWeek}`);
         }
     } catch (error) {
         console.error('Error loading planning:', error);
     }
+}
+
+// Load planning for a specific week
+async function loadPlanningForWeek(week, year) {
+    const key = `${week}-${year}`;
+
+    // Return from cache if already loaded
+    if (allWeeksPlanning[key]) {
+        return allWeeksPlanning[key];
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/api/planning?week=${week}&year=${year}`);
+        const data = await response.json();
+
+        if (data.success) {
+            allWeeksPlanning[key] = data.planning;
+            console.log(`Loaded ${data.planning.length} planned meals for week ${week}-${year}`);
+            return data.planning;
+        }
+    } catch (error) {
+        console.error('Error loading planning:', error);
+    }
+
+    return [];
 }
 
 // ===== METTRE À JOUR LE RÉSUMÉ NUTRITIONNEL D'UN JOUR =====
@@ -637,6 +672,8 @@ function initializeMealInclusions() {
 
 // Open settings popup
 settingsBtn.addEventListener('click', () => {
+    settingsWeek = currentWeek;
+    settingsYear = currentYear;
     initializeSettingsPopup();
     shoppingSettingsPopup.classList.add('active');
 });
@@ -669,7 +706,22 @@ function initializeSettingsPopup() {
 }
 
 // Display planning in settings popup
-function displaySettingsCalendar() {
+async function displaySettingsCalendar() {
+    // Update week display
+    settingsWeekDisplay.textContent = `Semaine ${settingsWeek} - ${settingsYear}`;
+
+    // Load planning for this week if not loaded
+    const weekPlanning = await loadPlanningForWeek(settingsWeek, settingsYear);
+    const isCurrentWeek = (settingsWeek === currentWeek && settingsYear === currentYear);
+
+    // Initialize mealInclusions for this week if not exists
+    weekPlanning.forEach((item, index) => {
+        const globalKey = `${settingsWeek}-${settingsYear}-${index}`;
+        if (mealInclusions[globalKey] === undefined) {
+            mealInclusions[globalKey] = isCurrentWeek; // Current week: included by default, others: excluded
+        }
+    });
+
     settingsCalendar.innerHTML = '';
 
     DAYS.forEach((day, dayIndex) => {
@@ -690,11 +742,11 @@ function displaySettingsCalendar() {
             mealLabel.textContent = meal;
             mealSlot.appendChild(mealLabel);
 
-            // Find planning item for this day/meal
-            const planningIndex = planning.findIndex(p => p.day === day && p.meal === meal);
+            // Find planning item for this day/meal in the displayed week
+            const planningIndex = weekPlanning.findIndex(p => p.day === day && p.meal === meal);
 
             if (planningIndex !== -1) {
-                const item = planning[planningIndex];
+                const item = weekPlanning[planningIndex];
                 const recipeId = item.recipe && item.recipe.length > 0 ? item.recipe[0] : null;
                 const recipe = recipeId ? recipes.find(r => r.id === recipeId) : null;
                 const recipeName = recipe ? recipe.name : 'Recette inconnue';
@@ -702,15 +754,32 @@ function displaySettingsCalendar() {
                 const mealItem = document.createElement('div');
                 mealItem.className = 'settings-meal-item';
 
+                const globalKey = `${settingsWeek}-${settingsYear}-${planningIndex}`;
+                const isIncluded = mealInclusions[globalKey];
+
+                let boxClass = 'settings-meal-box';
+                if (!isCurrentWeek) {
+                    boxClass += ' other-week'; // Yellow for other weeks
+                } else {
+                    boxClass += isIncluded ? ' included' : ' excluded';
+                }
+
                 const mealBox = document.createElement('div');
-                mealBox.className = `settings-meal-box ${mealInclusions[planningIndex] ? 'included' : 'excluded'}`;
+                mealBox.className = boxClass;
                 mealBox.textContent = recipeName;
-                mealBox.dataset.index = planningIndex;
+                mealBox.dataset.globalKey = globalKey;
 
                 // Toggle inclusion/exclusion
                 mealBox.addEventListener('click', () => {
-                    mealInclusions[planningIndex] = !mealInclusions[planningIndex];
-                    mealBox.className = `settings-meal-box ${mealInclusions[planningIndex] ? 'included' : 'excluded'}`;
+                    mealInclusions[globalKey] = !mealInclusions[globalKey];
+
+                    // Update color
+                    if (!isCurrentWeek) {
+                        // Keep yellow for other weeks
+                        mealBox.className = 'settings-meal-box other-week';
+                    } else {
+                        mealBox.className = `settings-meal-box ${mealInclusions[globalKey] ? 'included' : 'excluded'}`;
+                    }
                 });
 
                 const infoBtn = document.createElement('button');
@@ -811,6 +880,50 @@ function displayEditableShoppingList() {
     });
 }
 
+// Clear shopping list
+clearListBtn.addEventListener('click', () => {
+    if (confirm('Voulez-vous vraiment vider la liste de courses ?')) {
+        shoppingList = [];
+        shoppingContent.innerHTML = '<p class="empty-shopping">La liste a été vidée.</p>';
+    }
+});
+
+// Week navigation in settings popup
+settingsPrevWeek.addEventListener('click', async () => {
+    settingsWeek--;
+    if (settingsWeek < 1) {
+        settingsWeek = 52;
+        settingsYear--;
+    }
+    await loadPlanningForWeek(settingsWeek, settingsYear);
+    displaySettingsCalendar();
+});
+
+settingsNextWeek.addEventListener('click', async () => {
+    settingsWeek++;
+    if (settingsWeek > 52) {
+        settingsWeek = 1;
+        settingsYear++;
+    }
+    await loadPlanningForWeek(settingsWeek, settingsYear);
+    displaySettingsCalendar();
+});
+
+// Select all / none meals
+settingsSelectAll.addEventListener('click', () => {
+    Object.keys(mealInclusions).forEach(key => {
+        mealInclusions[key] = true;
+    });
+    displaySettingsCalendar();
+});
+
+settingsSelectNone.addEventListener('click', () => {
+    Object.keys(mealInclusions).forEach(key => {
+        mealInclusions[key] = false;
+    });
+    displaySettingsCalendar();
+});
+
 // Générer la liste de courses
 generateListBtn.addEventListener('click', () => {
     console.log('Génération de la liste de courses...');
@@ -822,97 +935,101 @@ function generateShoppingList() {
     shoppingList = [];
 
     console.log('=== DEBUG GÉNÉRATION LISTE ===');
-    console.log('Planning:', planning);
+    console.log('All weeks planning:', allWeeksPlanning);
     console.log('Recettes disponibles:', recipes);
     console.log('Meal inclusions:', mealInclusions);
-
-    if (planning.length === 0) {
-        shoppingContent.innerHTML = '<p class="empty-shopping">Aucun repas planifié pour cette semaine.</p>';
-        return;
-    }
 
     // Map pour agréger les ingrédients
     const ingredientsMap = {};
 
-    // Parcourir uniquement les repas inclus (verts)
-    planning.forEach((item, index) => {
-        // Skip if meal is excluded (red)
-        if (mealInclusions[index] === false) {
-            console.log(`Skipping excluded meal: ${item.day} - ${item.meal}`);
-            return;
-        }
+    // Parcourir toutes les semaines chargées
+    Object.keys(allWeeksPlanning).forEach(weekKey => {
+        const [week, year] = weekKey.split('-').map(Number);
+        const weekPlanning = allWeeksPlanning[weekKey];
 
-        console.log('Item planning:', item);
+        console.log(`Processing week ${week}-${year}:`, weekPlanning);
 
-        if (item.recipe && item.recipe.length > 0) {
-            const recipeId = item.recipe[0];
-            const recipe = recipes.find(r => r.id === recipeId);
+        weekPlanning.forEach((item, index) => {
+            const globalKey = `${week}-${year}-${index}`;
 
-            console.log('Recette trouvée:', recipe);
+            // Skip if meal is excluded
+            if (mealInclusions[globalKey] === false) {
+                console.log(`Skipping excluded meal: ${item.day} - ${item.meal} (${weekKey})`);
+                return;
+            }
 
-            if (recipe) {
-                console.log(`Type de ingredients:`, typeof recipe.ingredients);
-                console.log(`Ingrédients bruts:`, recipe.ingredients);
+            console.log('Item planning:', item);
 
-                if (recipe.ingredients) {
-                    try {
-                        // Parser le JSON des ingrédients
-                        let ingredientsList;
+            if (item.recipe && item.recipe.length > 0) {
+                const recipeId = item.recipe[0];
+                const recipe = recipes.find(r => r.id === recipeId);
 
-                        if (typeof recipe.ingredients === 'string') {
-                            ingredientsList = JSON.parse(recipe.ingredients);
-                        } else {
-                            ingredientsList = recipe.ingredients;
-                        }
+                console.log('Recette trouvée:', recipe);
 
-                        console.log(`Ingrédients parsés:`, ingredientsList);
+                if (recipe) {
+                    console.log(`Type de ingredients:`, typeof recipe.ingredients);
+                    console.log(`Ingrédients bruts:`, recipe.ingredients);
 
-                        if (Array.isArray(ingredientsList)) {
-                            ingredientsList.forEach(item => {
-                                const name = item.ingredient;
-                                const quantity = parseFloat(item.quantite) || 0;
-                                const unit = item.unite || 'unité';
+                    if (recipe.ingredients) {
+                        try {
+                            // Parser le JSON des ingrédients
+                            let ingredientsList;
 
-                                console.log(`Traitement: ${quantity} ${unit} ${name}`);
+                            if (typeof recipe.ingredients === 'string') {
+                                ingredientsList = JSON.parse(recipe.ingredients);
+                            } else {
+                                ingredientsList = recipe.ingredients;
+                            }
 
-                                const key = name.toLowerCase();
+                            console.log(`Ingrédients parsés:`, ingredientsList);
 
-                                if (ingredientsMap[key]) {
-                                    // Agréger les quantités (seulement si même unité)
-                                    if (ingredientsMap[key].unit === unit) {
-                                        ingredientsMap[key].quantity += quantity;
-                                    } else {
-                                        // Créer une entrée séparée avec l'unité différente
-                                        const newKey = `${key}_${unit}`;
-                                        if (ingredientsMap[newKey]) {
-                                            ingredientsMap[newKey].quantity += quantity;
+                            if (Array.isArray(ingredientsList)) {
+                                ingredientsList.forEach(item => {
+                                    const name = item.ingredient;
+                                    const quantity = parseFloat(item.quantite) || 0;
+                                    const unit = item.unite || 'unité';
+
+                                    console.log(`Traitement: ${quantity} ${unit} ${name}`);
+
+                                    const key = name.toLowerCase();
+
+                                    if (ingredientsMap[key]) {
+                                        // Agréger les quantités (seulement si même unité)
+                                        if (ingredientsMap[key].unit === unit) {
+                                            ingredientsMap[key].quantity += quantity;
                                         } else {
-                                            ingredientsMap[newKey] = {
-                                                name: name,
-                                                quantity: quantity,
-                                                unit: unit,
-                                                category: categorizeIngredient(name)
-                                            };
+                                            // Créer une entrée séparée avec l'unité différente
+                                            const newKey = `${key}_${unit}`;
+                                            if (ingredientsMap[newKey]) {
+                                                ingredientsMap[newKey].quantity += quantity;
+                                            } else {
+                                                ingredientsMap[newKey] = {
+                                                    name: name,
+                                                    quantity: quantity,
+                                                    unit: unit,
+                                                    category: categorizeIngredient(name)
+                                                };
+                                            }
                                         }
+                                    } else {
+                                        ingredientsMap[key] = {
+                                            name: name,
+                                            quantity: quantity,
+                                            unit: unit,
+                                            category: categorizeIngredient(name)
+                                        };
                                     }
-                                } else {
-                                    ingredientsMap[key] = {
-                                        name: name,
-                                        quantity: quantity,
-                                        unit: unit,
-                                        category: categorizeIngredient(name)
-                                    };
-                                }
-                            });
+                                });
+                            }
+                        } catch (error) {
+                            console.error(`Erreur parsing JSON pour ${recipe.name}:`, error);
                         }
-                    } catch (error) {
-                        console.error(`Erreur parsing JSON pour ${recipe.name}:`, error);
+                    } else {
+                        console.warn(`Pas d'ingrédients pour la recette: ${recipe.name}`);
                     }
-                } else {
-                    console.warn(`Pas d'ingrédients pour la recette: ${recipe.name}`);
                 }
             }
-        }
+        });
     });
 
     // Convertir en tableau

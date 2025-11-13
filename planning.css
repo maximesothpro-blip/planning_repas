@@ -434,7 +434,7 @@ body {
     gap: 10px;
 }
 
-.generate-list-btn, .export-list-btn, .settings-btn {
+.generate-list-btn, .export-list-btn, .settings-btn, .clear-list-btn {
     padding: 10px;
     background: #667eea;
     color: white;
@@ -450,10 +450,14 @@ body {
     flex: 1;
 }
 
-.settings-btn {
+.settings-btn, .clear-list-btn {
     font-size: 18px;
     padding: 10px 15px;
     background: #94a3b8;
+}
+
+.clear-list-btn {
+    background: #ef4444;
 }
 
 .export-list-btn {
@@ -463,6 +467,10 @@ body {
 
 .generate-list-btn:hover, .settings-btn:hover {
     background: #5568d3;
+}
+
+.clear-list-btn:hover {
+    background: #dc2626;
 }
 
 .export-list-btn:hover {
@@ -530,7 +538,7 @@ body {
     right: 0;
     bottom: 0;
     background: rgba(0, 0, 0, 0.5);
-    z-index: 1000;
+    z-index: 3000;
     align-items: center;
     justify-content: center;
 }
@@ -660,10 +668,67 @@ body {
     overflow: hidden;
 }
 
+.settings-planning-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
 .settings-planning h3 {
     font-size: 16px;
     color: #333;
-    margin: 0 0 10px 0;
+    margin: 0;
+}
+
+.settings-week-nav {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.settings-week-btn {
+    padding: 4px 10px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.settings-week-btn:hover {
+    background: #5568d3;
+}
+
+.settings-week-display {
+    font-size: 13px;
+    font-weight: bold;
+    color: #667eea;
+    min-width: 120px;
+    text-align: center;
+}
+
+.settings-actions {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.settings-select-btn {
+    flex: 1;
+    padding: 6px 10px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background 0.2s;
+}
+
+.settings-select-btn:hover {
+    background: #5568d3;
 }
 
 .settings-help {
@@ -739,6 +804,12 @@ body {
 .settings-meal-box.excluded {
     background: #fca5a5;
     border: 2px solid #ef4444;
+}
+
+.settings-meal-box.other-week {
+    background: #fde047;
+    border: 2px solid #eab308;
+    opacity: 0.7;
 }
 
 .settings-meal-box:hover {
