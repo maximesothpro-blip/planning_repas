@@ -3,54 +3,112 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat avec mon Bot Telegram</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Planning de Repas</title>
+    <link rel="stylesheet" href="planning.css">
 </head>
 <body>
-    <div class="chat-container">
-        <div class="chat-header">
-            <h1>Chat Bot Telegram</h1>
-            <div class="status" id="status">
-                <span class="status-indicator"></span>
-                <span class="status-text">En ligne</span>
-            </div>
-        </div>
+    <!-- Bouton pour rouvrir la sidebar quand elle est cachée -->
+    <button class="show-sidebar-btn" id="showSidebar">▶ Recettes</button>
 
-        <div class="chat-messages" id="chatMessages">
-            <div class="message bot-message">
-                <div class="message-content">
-                    <p>Bonjour ! Je suis votre bot Telegram. Comment puis-je vous aider ?</p>
+    <div class="container">
+        <!-- Sidebar Recettes -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2>Recettes</h2>
+                <div class="header-buttons">
+                    <button class="refresh-btn" id="refreshRecipes" title="Actualiser les recettes">↻</button>
+                    <button class="toggle-btn" id="toggleSidebar">◀</button>
                 </div>
-                <div class="message-time">Maintenant</div>
             </div>
-        </div>
-
-        <div class="chat-input-container">
-            <div class="typing-indicator" id="typingIndicator">
-                <span></span>
-                <span></span>
-                <span></span>
-            </div>
-            <form class="chat-input-form" id="chatForm">
+            <div class="search-container">
                 <input
                     type="text"
-                    class="chat-input"
-                    id="messageInput"
-                    placeholder="Écrivez votre message..."
-                    autocomplete="off"
-                    required
+                    class="search-input"
+                    id="searchRecipes"
+                    placeholder="Rechercher une recette..."
                 />
-                <button type="submit" class="send-button" id="sendButton">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="22" y1="2" x2="11" y2="13"></line>
-                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                    </svg>
-                </button>
-            </form>
+            </div>
+            <div class="recipes-list" id="recipesList">
+                <div class="loading">Chargement...</div>
+            </div>
+        </aside>
+
+        <!-- Planning -->
+        <main class="planning">
+            <div class="planning-header">
+                <h1>Planning de la Semaine</h1>
+                <div class="week-navigation">
+                    <button class="week-nav-btn" id="prevWeek">← Précédent</button>
+                    <span class="week-display" id="weekDisplay">Semaine 46 - 2025</span>
+                    <button class="week-nav-btn" id="nextWeek">Suivant →</button>
+                </div>
+            </div>
+            <div class="calendar-grid" id="calendar">
+                <!-- Généré dynamiquement -->
+            </div>
+        </main>
+
+        <!-- Sidebar droite : Bot & Liste de courses -->
+        <aside class="right-sidebar">
+            <!-- Onglets -->
+            <div class="tabs-header">
+                <button class="tab-btn active" data-tab="bot">Bot</button>
+                <button class="tab-btn" data-tab="shopping">Liste de courses</button>
+            </div>
+
+            <!-- Contenu Bot -->
+            <div class="tab-content active" id="botTab">
+                <div class="chat-container">
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="message bot-message">
+                            <div class="message-content">
+                                <p>Bonjour ! Je peux vous aider à créer des recettes.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chat-input-container">
+                        <form class="chat-input-form" id="chatForm">
+                            <input
+                                type="text"
+                                class="chat-input"
+                                id="messageInput"
+                                placeholder="Votre message..."
+                                autocomplete="off"
+                            />
+                            <button type="submit" class="send-button">➤</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contenu Liste de courses -->
+            <div class="tab-content" id="shoppingTab">
+                <div class="shopping-container">
+                    <div class="shopping-header">
+                        <button class="generate-list-btn" id="generateList">Générer la liste</button>
+                        <button class="export-list-btn" id="exportList">Exporter</button>
+                    </div>
+                    <div class="shopping-content" id="shoppingContent">
+                        <p class="empty-shopping">Cliquez sur "Générer la liste" pour créer votre liste de courses.</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Popup pour les détails de recette -->
+    <div class="recipe-popup" id="recipePopup">
+        <div class="popup-content">
+            <button class="close-popup" id="closePopup">×</button>
+            <h2 id="popupTitle"></h2>
+            <div id="popupBody"></div>
         </div>
     </div>
 
+    <!-- Version -->
+    <div class="version-info">v2.1.0</div>
+
     <script src="config.js"></script>
-    <script src="script.js"></script>
+    <script src="planning.js"></script>
 </body>
 </html>
