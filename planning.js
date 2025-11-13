@@ -3,6 +3,7 @@ const API_URL = window.BACKEND_API_URL || 'http://localhost:3000';
 
 // État global
 let recipes = [];
+let planning = [];
 let currentWeek = getCurrentWeek();
 let currentYear = new Date().getFullYear();
 
@@ -26,7 +27,9 @@ const MEALS = ['Déjeuner', 'Dîner'];
 // ===== INITIALISATION =====
 async function init() {
     await loadRecipes();
+    await loadPlanning();
     createCalendar();
+    displayPlanning();
     setupEventListeners();
 }
 
@@ -44,6 +47,50 @@ async function loadRecipes() {
         console.error('Error loading recipes:', error);
         recipesList.innerHTML = '<div class="loading">Erreur de chargement</div>';
     }
+}
+
+// ===== CHARGER LE PLANNING =====
+async function loadPlanning() {
+    try {
+        const response = await fetch(`${API_URL}/api/planning?week=${currentWeek}&year=${currentYear}`);
+        const data = await response.json();
+
+        if (data.success) {
+            planning = data.planning;
+            console.log(`Loaded ${planning.length} planned meals for week ${currentWeek}`);
+        }
+    } catch (error) {
+        console.error('Error loading planning:', error);
+    }
+}
+
+// ===== AFFICHER LE PLANNING =====
+function displayPlanning() {
+    planning.forEach(item => {
+        // Trouver le slot correspondant dans le calendrier
+        const slot = document.querySelector(`[data-day="${item.day}"][data-meal="${item.meal}"]`);
+        if (!slot) return;
+
+        // Trouver le nom de la recette
+        let recipeName = 'Recette inconnue';
+        let recipeData = null;
+
+        if (item.recipe && item.recipe.length > 0) {
+            const recipeId = item.recipe[0];
+            recipeData = recipes.find(r => r.id === recipeId);
+            if (recipeData) {
+                recipeName = recipeData.name;
+            }
+        }
+
+        // Afficher la recette dans le slot
+        const mealContent = slot.querySelector('.meal-content');
+        mealContent.innerHTML = `
+            <div class="planned-recipe" data-record-id="${item.id}" data-recipe-id="${item.recipe[0] || ''}">
+                ${recipeName}
+            </div>
+        `;
+    });
 }
 
 // ===== AFFICHER LES RECETTES =====
@@ -170,7 +217,9 @@ async function handleDrop(e) {
                 day: day,
                 date: date,
                 meal: meal,
-                recipeId: recipeId
+                recipeId: recipeId,
+                week: currentWeek,
+                year: currentYear
             })
         });
 
