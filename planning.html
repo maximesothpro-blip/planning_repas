@@ -48,30 +48,49 @@
             </div>
         </main>
 
-        <!-- Chat Bot -->
-        <aside class="chat-sidebar">
-            <div class="chat-container">
-                <div class="chat-header">
-                    <h3>Assistant Bot</h3>
-                </div>
-                <div class="chat-messages" id="chatMessages">
-                    <div class="message bot-message">
-                        <div class="message-content">
-                            <p>Bonjour ! Je peux vous aider à créer des recettes.</p>
+        <!-- Sidebar droite : Bot & Liste de courses -->
+        <aside class="right-sidebar">
+            <!-- Onglets -->
+            <div class="tabs-header">
+                <button class="tab-btn active" data-tab="bot">Bot</button>
+                <button class="tab-btn" data-tab="shopping">Liste de courses</button>
+            </div>
+
+            <!-- Contenu Bot -->
+            <div class="tab-content active" id="botTab">
+                <div class="chat-container">
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="message bot-message">
+                            <div class="message-content">
+                                <p>Bonjour ! Je peux vous aider à créer des recettes.</p>
+                            </div>
                         </div>
                     </div>
+                    <div class="chat-input-container">
+                        <form class="chat-input-form" id="chatForm">
+                            <input
+                                type="text"
+                                class="chat-input"
+                                id="messageInput"
+                                placeholder="Votre message..."
+                                autocomplete="off"
+                            />
+                            <button type="submit" class="send-button">➤</button>
+                        </form>
+                    </div>
                 </div>
-                <div class="chat-input-container">
-                    <form class="chat-input-form" id="chatForm">
-                        <input
-                            type="text"
-                            class="chat-input"
-                            id="messageInput"
-                            placeholder="Votre message..."
-                            autocomplete="off"
-                        />
-                        <button type="submit" class="send-button">➤</button>
-                    </form>
+            </div>
+
+            <!-- Contenu Liste de courses -->
+            <div class="tab-content" id="shoppingTab">
+                <div class="shopping-container">
+                    <div class="shopping-header">
+                        <button class="generate-list-btn" id="generateList">Générer la liste</button>
+                        <button class="export-list-btn" id="exportList">Exporter</button>
+                    </div>
+                    <div class="shopping-content" id="shoppingContent">
+                        <p class="empty-shopping">Cliquez sur "Générer la liste" pour créer votre liste de courses.</p>
+                    </div>
                 </div>
             </div>
         </aside>

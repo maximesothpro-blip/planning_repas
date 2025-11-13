@@ -36,6 +36,7 @@ async function init() {
     createCalendar();
     displayPlanning();
     setupEventListeners();
+    setupTabs();
 }
 
 // ===== METTRE À JOUR L'AFFICHAGE DE LA SEMAINE =====
@@ -589,6 +590,26 @@ function getDateForDay(dayName) {
 
 function setupEventListeners() {
     // Déjà fait dans le code ci-dessus
+}
+
+// ===== GESTION DES ONGLETS =====
+function setupTabs() {
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const targetTab = btn.dataset.tab;
+
+            // Retirer l'active de tous les boutons et contenus
+            tabBtns.forEach(b => b.classList.remove('active'));
+            tabContents.forEach(c => c.classList.remove('active'));
+
+            // Activer le bouton et contenu sélectionné
+            btn.classList.add('active');
+            document.getElementById(`${targetTab}Tab`).classList.add('active');
+        });
+    });
 }
 
 // ===== DÉMARRAGE =====

@@ -297,29 +297,60 @@ body {
     font-weight: 500;
 }
 
-/* ===== CHAT SIDEBAR ===== */
-.chat-sidebar {
-    width: 300px;
+/* ===== RIGHT SIDEBAR (Bot & Shopping) ===== */
+.right-sidebar {
+    width: 350px;
     background: white;
     border-left: 2px solid #ddd;
     display: flex;
     flex-direction: column;
 }
 
+.tabs-header {
+    display: flex;
+    background: #f5f5f5;
+    border-bottom: 2px solid #ddd;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 12px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: #666;
+    transition: all 0.2s;
+}
+
+.tab-btn:hover {
+    background: #e0e0e0;
+}
+
+.tab-btn.active {
+    background: white;
+    color: #667eea;
+    border-bottom: 3px solid #667eea;
+}
+
+.tab-content {
+    display: none;
+    flex: 1;
+    overflow: hidden;
+}
+
+.tab-content.active {
+    display: flex;
+    flex-direction: column;
+}
+
+/* ===== BOT TAB ===== */
 .chat-container {
     display: flex;
     flex-direction: column;
     height: 100%;
-}
-
-.chat-header {
-    background: #667eea;
-    color: white;
-    padding: 15px;
-}
-
-.chat-header h3 {
-    font-size: 16px;
+    flex: 1;
 }
 
 .chat-messages {
@@ -386,6 +417,59 @@ body {
 
 .send-button:hover {
     background: #5568d3;
+}
+
+/* ===== SHOPPING LIST TAB ===== */
+.shopping-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    flex: 1;
+}
+
+.shopping-header {
+    padding: 15px;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    gap: 10px;
+}
+
+.generate-list-btn, .export-list-btn {
+    flex: 1;
+    padding: 10px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background 0.2s;
+}
+
+.generate-list-btn:hover, .export-list-btn:hover {
+    background: #5568d3;
+}
+
+.export-list-btn {
+    background: #10b981;
+}
+
+.export-list-btn:hover {
+    background: #059669;
+}
+
+.shopping-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px;
+}
+
+.empty-shopping {
+    text-align: center;
+    color: #999;
+    padding: 40px 20px;
+    font-size: 14px;
 }
 
 /* ===== POPUP ===== */
