@@ -7,6 +7,7 @@ let planning = [];
 let shoppingList = [];
 let currentWeek = getCurrentWeek();
 let currentYear = new Date().getFullYear();
+let mealInclusions = {}; // Track which meals are included (green) or excluded (red)
 
 // Éléments DOM
 const recipesList = document.getElementById('recipesList');
@@ -27,9 +28,12 @@ const searchRecipes = document.getElementById('searchRecipes');
 const generateListBtn = document.getElementById('generateList');
 const exportListBtn = document.getElementById('exportList');
 const shoppingContent = document.getElementById('shoppingContent');
-const mealCheckboxes = document.getElementById('mealCheckboxes');
-const selectAllMeals = document.getElementById('selectAllMeals');
-const deselectAllMeals = document.getElementById('deselectAllMeals');
+const settingsBtn = document.getElementById('settingsBtn');
+const shoppingSettingsPopup = document.getElementById('shoppingSettingsPopup');
+const closeSettingsPopup = document.getElementById('closeSettingsPopup');
+const settingsCalendar = document.getElementById('settingsCalendar');
+const settingsListContent = document.getElementById('settingsListContent');
+const applySettings = document.getElementById('applySettings');
 
 // Jours de la semaine
 const DAYS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
@@ -42,7 +46,7 @@ async function init() {
     await loadPlanning();
     createCalendar();
     displayPlanning();
-    displayMealCheckboxes();
+    initializeMealInclusions();
     setupEventListeners();
     setupTabs();
 }
@@ -553,7 +557,7 @@ async function reloadWeek() {
     await loadPlanning();
     createCalendar();
     displayPlanning();
-    displayMealCheckboxes();
+    initializeMealInclusions();
 }
 
 // ===== RECHERCHE DE RECETTES =====
@@ -623,47 +627,194 @@ function setupTabs() {
 
 // ===== LISTE DE COURSES =====
 
-// Afficher les checkboxes des repas planifiés
-function displayMealCheckboxes() {
-    if (planning.length === 0) {
-        mealCheckboxes.innerHTML = '<p class="empty-selection">Aucun repas planifié cette semaine.</p>';
+// Initialize meal inclusions (all meals included by default)
+function initializeMealInclusions() {
+    mealInclusions = {};
+    planning.forEach((item, index) => {
+        mealInclusions[index] = true; // true = included (green), false = excluded (red)
+    });
+}
+
+// Open settings popup
+settingsBtn.addEventListener('click', () => {
+    initializeSettingsPopup();
+    shoppingSettingsPopup.classList.add('active');
+});
+
+// Close settings popup
+closeSettingsPopup.addEventListener('click', () => {
+    shoppingSettingsPopup.classList.remove('active');
+});
+
+// Close on outside click
+shoppingSettingsPopup.addEventListener('click', (e) => {
+    if (e.target === shoppingSettingsPopup) {
+        shoppingSettingsPopup.classList.remove('active');
+    }
+});
+
+// Apply and close
+applySettings.addEventListener('click', () => {
+    generateShoppingList();
+    shoppingSettingsPopup.classList.remove('active');
+});
+
+// Initialize settings popup
+function initializeSettingsPopup() {
+    // Display planning grid
+    displaySettingsCalendar();
+
+    // Display current shopping list for editing
+    displayEditableShoppingList();
+}
+
+// Display planning in settings popup
+function displaySettingsCalendar() {
+    settingsCalendar.innerHTML = '';
+
+    DAYS.forEach((day, dayIndex) => {
+        const dayColumn = document.createElement('div');
+        dayColumn.className = 'settings-day-column';
+
+        const dayHeader = document.createElement('div');
+        dayHeader.className = 'settings-day-header';
+        dayHeader.textContent = day;
+        dayColumn.appendChild(dayHeader);
+
+        MEALS.forEach(meal => {
+            const mealSlot = document.createElement('div');
+            mealSlot.className = 'settings-meal-slot';
+
+            const mealLabel = document.createElement('div');
+            mealLabel.className = 'settings-meal-label';
+            mealLabel.textContent = meal;
+            mealSlot.appendChild(mealLabel);
+
+            // Find planning item for this day/meal
+            const planningIndex = planning.findIndex(p => p.day === day && p.meal === meal);
+
+            if (planningIndex !== -1) {
+                const item = planning[planningIndex];
+                const recipeId = item.recipe && item.recipe.length > 0 ? item.recipe[0] : null;
+                const recipe = recipeId ? recipes.find(r => r.id === recipeId) : null;
+                const recipeName = recipe ? recipe.name : 'Recette inconnue';
+
+                const mealItem = document.createElement('div');
+                mealItem.className = 'settings-meal-item';
+
+                const mealBox = document.createElement('div');
+                mealBox.className = `settings-meal-box ${mealInclusions[planningIndex] ? 'included' : 'excluded'}`;
+                mealBox.textContent = recipeName;
+                mealBox.dataset.index = planningIndex;
+
+                // Toggle inclusion/exclusion
+                mealBox.addEventListener('click', () => {
+                    mealInclusions[planningIndex] = !mealInclusions[planningIndex];
+                    mealBox.className = `settings-meal-box ${mealInclusions[planningIndex] ? 'included' : 'excluded'}`;
+                });
+
+                const infoBtn = document.createElement('button');
+                infoBtn.className = 'settings-info-btn';
+                infoBtn.textContent = 'i';
+                infoBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (recipe) {
+                        showRecipePopup(recipe);
+                    }
+                });
+
+                mealItem.appendChild(mealBox);
+                mealItem.appendChild(infoBtn);
+                mealSlot.appendChild(mealItem);
+            }
+
+            dayColumn.appendChild(mealSlot);
+        });
+
+        settingsCalendar.appendChild(dayColumn);
+    });
+}
+
+// Display editable shopping list
+function displayEditableShoppingList() {
+    if (shoppingList.length === 0) {
+        settingsListContent.innerHTML = '<p class="empty-shopping">Générez d\'abord la liste pour l\'éditer.</p>';
         return;
     }
 
-    let html = '';
-    planning.forEach((item, index) => {
-        const recipeId = item.recipe && item.recipe.length > 0 ? item.recipe[0] : null;
-        const recipe = recipeId ? recipes.find(r => r.id === recipeId) : null;
-        const recipeName = recipe ? recipe.name : 'Recette inconnue';
-
-        html += `
-            <div class="meal-checkbox-item">
-                <input type="checkbox" id="meal-${index}" value="${index}" checked>
-                <label for="meal-${index}">${item.day} - ${item.meal} : ${recipeName}</label>
-            </div>
-        `;
+    // Group by category
+    const byCategory = {};
+    shoppingList.forEach((item, index) => {
+        if (!byCategory[item.category]) {
+            byCategory[item.category] = [];
+        }
+        byCategory[item.category].push({ ...item, index });
     });
 
-    mealCheckboxes.innerHTML = html;
+    let html = '<div class="editable-shopping-list">';
+
+    const categories = Object.keys(byCategory).sort();
+    categories.forEach(category => {
+        html += `<div class="shopping-category">`;
+        html += `<h4>${category}</h4>`;
+
+        byCategory[category].forEach(item => {
+            const quantityStr = item.quantity % 1 === 0 ? item.quantity : item.quantity.toFixed(1);
+            html += `
+                <div class="editable-ingredient" data-index="${item.index}">
+                    <input type="number" class="ingredient-qty" value="${quantityStr}" step="0.1" min="0">
+                    <select class="ingredient-unit">
+                        <option value="g" ${item.unit === 'g' ? 'selected' : ''}>g</option>
+                        <option value="kg" ${item.unit === 'kg' ? 'selected' : ''}>kg</option>
+                        <option value="ml" ${item.unit === 'ml' ? 'selected' : ''}>ml</option>
+                        <option value="L" ${item.unit === 'L' ? 'selected' : ''}>L</option>
+                        <option value="c.à.s" ${item.unit === 'c.à.s' ? 'selected' : ''}>c.à.s</option>
+                        <option value="c.à.c" ${item.unit === 'c.à.c' ? 'selected' : ''}>c.à.c</option>
+                        <option value="pièce" ${item.unit === 'pièce' ? 'selected' : ''}>pièce</option>
+                        <option value="pincée" ${item.unit === 'pincée' ? 'selected' : ''}>pincée</option>
+                        <option value="unité" ${item.unit === 'unité' ? 'selected' : ''}>unité</option>
+                    </select>
+                    <span class="ingredient-name">${item.name}</span>
+                    <button class="ingredient-delete-btn" data-index="${item.index}">🗑️</button>
+                </div>
+            `;
+        });
+
+        html += `</div>`;
+    });
+
+    html += '</div>';
+    settingsListContent.innerHTML = html;
+
+    // Add event listeners for editing
+    document.querySelectorAll('.ingredient-qty').forEach(input => {
+        input.addEventListener('change', (e) => {
+            const index = parseInt(e.target.closest('.editable-ingredient').dataset.index);
+            shoppingList[index].quantity = parseFloat(e.target.value) || 0;
+        });
+    });
+
+    document.querySelectorAll('.ingredient-unit').forEach(select => {
+        select.addEventListener('change', (e) => {
+            const index = parseInt(e.target.closest('.editable-ingredient').dataset.index);
+            shoppingList[index].unit = e.target.value;
+        });
+    });
+
+    document.querySelectorAll('.ingredient-delete-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const index = parseInt(e.target.dataset.index);
+            shoppingList.splice(index, 1);
+            displayEditableShoppingList();
+            displayShoppingList(); // Update main display
+        });
+    });
 }
-
-// Sélectionner tous les repas
-selectAllMeals.addEventListener('click', () => {
-    document.querySelectorAll('#mealCheckboxes input[type="checkbox"]').forEach(checkbox => {
-        checkbox.checked = true;
-    });
-});
-
-// Désélectionner tous les repas
-deselectAllMeals.addEventListener('click', () => {
-    document.querySelectorAll('#mealCheckboxes input[type="checkbox"]').forEach(checkbox => {
-        checkbox.checked = false;
-    });
-});
 
 // Générer la liste de courses
 generateListBtn.addEventListener('click', () => {
     console.log('Génération de la liste de courses...');
+    initializeMealInclusions(); // Reset to all included
     generateShoppingList();
 });
 
@@ -673,31 +824,24 @@ function generateShoppingList() {
     console.log('=== DEBUG GÉNÉRATION LISTE ===');
     console.log('Planning:', planning);
     console.log('Recettes disponibles:', recipes);
+    console.log('Meal inclusions:', mealInclusions);
 
     if (planning.length === 0) {
         shoppingContent.innerHTML = '<p class="empty-shopping">Aucun repas planifié pour cette semaine.</p>';
         return;
     }
 
-    // Récupérer les repas sélectionnés
-    const selectedMealIndices = [];
-    document.querySelectorAll('#mealCheckboxes input[type="checkbox"]:checked').forEach(checkbox => {
-        selectedMealIndices.push(parseInt(checkbox.value));
-    });
-
-    console.log('Repas sélectionnés:', selectedMealIndices);
-
-    if (selectedMealIndices.length === 0) {
-        shoppingContent.innerHTML = '<p class="empty-shopping">Veuillez sélectionner au moins un repas.</p>';
-        return;
-    }
-
     // Map pour agréger les ingrédients
     const ingredientsMap = {};
 
-    // Parcourir uniquement les repas sélectionnés
-    selectedMealIndices.forEach(index => {
-        const item = planning[index];
+    // Parcourir uniquement les repas inclus (verts)
+    planning.forEach((item, index) => {
+        // Skip if meal is excluded (red)
+        if (mealInclusions[index] === false) {
+            console.log(`Skipping excluded meal: ${item.day} - ${item.meal}`);
+            return;
+        }
+
         console.log('Item planning:', item);
 
         if (item.recipe && item.recipe.length > 0) {

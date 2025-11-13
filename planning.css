@@ -434,8 +434,7 @@ body {
     gap: 10px;
 }
 
-.generate-list-btn, .export-list-btn {
-    flex: 1;
+.generate-list-btn, .export-list-btn, .settings-btn {
     padding: 10px;
     background: #667eea;
     color: white;
@@ -447,89 +446,27 @@ body {
     transition: background 0.2s;
 }
 
-.generate-list-btn:hover, .export-list-btn:hover {
-    background: #5568d3;
+.generate-list-btn {
+    flex: 1;
+}
+
+.settings-btn {
+    font-size: 18px;
+    padding: 10px 15px;
+    background: #94a3b8;
 }
 
 .export-list-btn {
+    flex: 1;
     background: #10b981;
+}
+
+.generate-list-btn:hover, .settings-btn:hover {
+    background: #5568d3;
 }
 
 .export-list-btn:hover {
     background: #059669;
-}
-
-.meal-selection {
-    padding: 15px;
-    border-bottom: 1px solid #ddd;
-    background: #f8fafc;
-}
-
-.meal-selection-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-}
-
-.meal-selection-header h4 {
-    font-size: 14px;
-    color: #333;
-    margin: 0;
-}
-
-.selection-buttons {
-    display: flex;
-    gap: 5px;
-}
-
-.select-all-btn, .deselect-all-btn {
-    padding: 4px 10px;
-    font-size: 12px;
-    border: 1px solid #667eea;
-    background: white;
-    color: #667eea;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.select-all-btn:hover, .deselect-all-btn:hover {
-    background: #667eea;
-    color: white;
-}
-
-.meal-checkboxes {
-    max-height: 200px;
-    overflow-y: auto;
-}
-
-.meal-checkbox-item {
-    display: flex;
-    align-items: center;
-    padding: 6px 8px;
-    margin-bottom: 4px;
-    background: white;
-    border-radius: 4px;
-    border: 1px solid #e0e0e0;
-    font-size: 13px;
-}
-
-.meal-checkbox-item input[type="checkbox"] {
-    margin-right: 8px;
-    cursor: pointer;
-}
-
-.meal-checkbox-item label {
-    cursor: pointer;
-    flex: 1;
-}
-
-.empty-selection {
-    text-align: center;
-    color: #999;
-    padding: 20px;
-    font-size: 13px;
 }
 
 .shopping-content {
@@ -670,6 +607,247 @@ body {
 
 .show-sidebar-btn.visible {
     display: block;
+}
+
+/* ===== POPUP PARAMÈTRES LISTE DE COURSES ===== */
+.shopping-settings-popup {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+}
+
+.shopping-settings-popup.active {
+    display: flex;
+}
+
+.settings-popup-content {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    width: 90vw;
+    max-width: 1200px;
+    max-height: 85vh;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.settings-popup-content h2 {
+    margin: 0 0 20px 0;
+    color: #667eea;
+    font-size: 20px;
+}
+
+.settings-layout {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 20px;
+    flex: 1;
+    overflow: hidden;
+}
+
+.settings-planning {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.settings-planning h3 {
+    font-size: 16px;
+    color: #333;
+    margin: 0 0 10px 0;
+}
+
+.settings-help {
+    font-size: 12px;
+    color: #666;
+    margin: 0 0 15px 0;
+    font-style: italic;
+}
+
+.settings-calendar {
+    flex: 1;
+    overflow-y: auto;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+}
+
+.settings-day-column {
+    background: white;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    overflow: hidden;
+}
+
+.settings-day-header {
+    background: #667eea;
+    color: white;
+    padding: 6px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.settings-meal-slot {
+    padding: 8px;
+    min-height: 60px;
+    border-bottom: 1px solid #eee;
+    position: relative;
+}
+
+.settings-meal-slot:last-child {
+    border-bottom: none;
+}
+
+.settings-meal-label {
+    font-size: 10px;
+    color: #666;
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+.settings-meal-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.settings-meal-box {
+    flex: 1;
+    padding: 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+}
+
+.settings-meal-box.included {
+    background: #86efac;
+    border: 2px solid #22c55e;
+}
+
+.settings-meal-box.excluded {
+    background: #fca5a5;
+    border: 2px solid #ef4444;
+}
+
+.settings-meal-box:hover {
+    opacity: 0.8;
+}
+
+.settings-info-btn {
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 11px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.settings-info-btn:hover {
+    background: #5568d3;
+}
+
+.settings-shopping-list {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-left: 2px solid #ddd;
+    padding-left: 20px;
+}
+
+.settings-shopping-list h3 {
+    font-size: 16px;
+    color: #333;
+    margin: 0 0 15px 0;
+}
+
+.settings-list-content {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.editable-ingredient {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    margin-bottom: 6px;
+    background: #f8fafc;
+    border-radius: 4px;
+    border-left: 3px solid #667eea;
+}
+
+.editable-ingredient input {
+    width: 50px;
+    padding: 4px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.editable-ingredient select {
+    padding: 4px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 11px;
+}
+
+.editable-ingredient .ingredient-name {
+    flex: 1;
+    font-size: 12px;
+}
+
+.ingredient-delete-btn {
+    background: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 11px;
+    cursor: pointer;
+}
+
+.ingredient-delete-btn:hover {
+    background: #dc2626;
+}
+
+.settings-footer {
+    margin-top: 20px;
+    text-align: right;
+    padding-top: 15px;
+    border-top: 1px solid #ddd;
+}
+
+.settings-apply-btn {
+    padding: 10px 20px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.settings-apply-btn:hover {
+    background: #5568d3;
 }
 
 /* ===== VERSION INFO ===== */

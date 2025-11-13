@@ -86,22 +86,11 @@
                 <div class="shopping-container">
                     <div class="shopping-header">
                         <button class="generate-list-btn" id="generateList">Générer la liste</button>
+                        <button class="settings-btn" id="settingsBtn" title="Paramètres">⚙️</button>
                         <button class="export-list-btn" id="exportList">Exporter</button>
                     </div>
-                    <div class="meal-selection" id="mealSelection">
-                        <div class="meal-selection-header">
-                            <h4>Repas à inclure :</h4>
-                            <div class="selection-buttons">
-                                <button class="select-all-btn" id="selectAllMeals">Tous</button>
-                                <button class="deselect-all-btn" id="deselectAllMeals">Aucun</button>
-                            </div>
-                        </div>
-                        <div class="meal-checkboxes" id="mealCheckboxes">
-                            <p class="empty-selection">Aucun repas planifié cette semaine.</p>
-                        </div>
-                    </div>
                     <div class="shopping-content" id="shoppingContent">
-                        <p class="empty-shopping">Sélectionnez les repas ci-dessus et cliquez sur "Générer la liste".</p>
+                        <p class="empty-shopping">Cliquez sur "Générer la liste" pour créer votre liste de courses.</p>
                     </div>
                 </div>
             </div>
@@ -117,8 +106,39 @@
         </div>
     </div>
 
+    <!-- Popup Paramètres Liste de Courses -->
+    <div class="shopping-settings-popup" id="shoppingSettingsPopup">
+        <div class="settings-popup-content">
+            <button class="close-popup" id="closeSettingsPopup">×</button>
+            <h2>Paramètres de la liste de courses</h2>
+
+            <div class="settings-layout">
+                <!-- Colonne gauche : Planning -->
+                <div class="settings-planning">
+                    <h3>Planning de la semaine</h3>
+                    <p class="settings-help">Cliquez sur un repas pour l'inclure (vert) ou l'exclure (rouge)</p>
+                    <div class="settings-calendar" id="settingsCalendar">
+                        <!-- Généré dynamiquement -->
+                    </div>
+                </div>
+
+                <!-- Colonne droite : Liste éditable -->
+                <div class="settings-shopping-list">
+                    <h3>Liste de courses</h3>
+                    <div class="settings-list-content" id="settingsListContent">
+                        <p class="empty-shopping">Générez d'abord la liste pour l'éditer.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-footer">
+                <button class="settings-apply-btn" id="applySettings">Appliquer et fermer</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Version -->
-    <div class="version-info">v2.4-step4</div>
+    <div class="version-info">v2.5-step5</div>
 
     <script src="config.js"></script>
     <script src="planning.js"></script>
