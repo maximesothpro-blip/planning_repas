@@ -4,6 +4,7 @@ const API_URL = window.BACKEND_API_URL || 'http://localhost:3000';
 // État global
 let recipes = [];
 let planning = [];
+let shoppingList = [];
 let currentWeek = getCurrentWeek();
 let currentYear = new Date().getFullYear();
 
@@ -23,6 +24,9 @@ const prevWeek = document.getElementById('prevWeek');
 const nextWeek = document.getElementById('nextWeek');
 const weekDisplay = document.getElementById('weekDisplay');
 const searchRecipes = document.getElementById('searchRecipes');
+const generateListBtn = document.getElementById('generateList');
+const exportListBtn = document.getElementById('exportList');
+const shoppingContent = document.getElementById('shoppingContent');
 
 // Jours de la semaine
 const DAYS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
@@ -610,6 +614,65 @@ function setupTabs() {
             document.getElementById(`${targetTab}Tab`).classList.add('active');
         });
     });
+}
+
+// ===== LISTE DE COURSES =====
+
+// Générer la liste de courses
+generateListBtn.addEventListener('click', () => {
+    console.log('Génération de la liste de courses...');
+    generateShoppingList();
+});
+
+function generateShoppingList() {
+    shoppingList = [];
+
+    if (planning.length === 0) {
+        shoppingContent.innerHTML = '<p class="empty-shopping">Aucun repas planifié pour cette semaine.</p>';
+        return;
+    }
+
+    // Parcourir tous les repas planifiés de la semaine
+    planning.forEach(item => {
+        if (item.recipe && item.recipe.length > 0) {
+            const recipeId = item.recipe[0];
+            const recipe = recipes.find(r => r.id === recipeId);
+
+            if (recipe) {
+                console.log(`Recette trouvée: ${recipe.name}`);
+                shoppingList.push({
+                    name: recipe.name,
+                    day: item.day,
+                    meal: item.meal,
+                    category: 'Recettes planifiées'
+                });
+            }
+        }
+    });
+
+    // Afficher la liste
+    displayShoppingList();
+}
+
+// Afficher la liste de courses
+function displayShoppingList() {
+    console.log('Affichage liste:', shoppingList);
+
+    if (shoppingList.length === 0) {
+        shoppingContent.innerHTML = '<p class="empty-shopping">Aucun repas planifié pour cette semaine.</p>';
+        return;
+    }
+
+    // Générer le HTML simple
+    let html = '<div class="shopping-list"><h3>Repas planifiés cette semaine :</h3><ul>';
+
+    shoppingList.forEach(item => {
+        html += `<li>${item.day} - ${item.meal} : ${item.name}</li>`;
+    });
+
+    html += '</ul></div>';
+
+    shoppingContent.innerHTML = html;
 }
 
 // ===== DÉMARRAGE =====
