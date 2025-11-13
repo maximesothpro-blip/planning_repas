@@ -88,8 +88,20 @@
                         <button class="generate-list-btn" id="generateList">Générer la liste</button>
                         <button class="export-list-btn" id="exportList">Exporter</button>
                     </div>
+                    <div class="meal-selection" id="mealSelection">
+                        <div class="meal-selection-header">
+                            <h4>Repas à inclure :</h4>
+                            <div class="selection-buttons">
+                                <button class="select-all-btn" id="selectAllMeals">Tous</button>
+                                <button class="deselect-all-btn" id="deselectAllMeals">Aucun</button>
+                            </div>
+                        </div>
+                        <div class="meal-checkboxes" id="mealCheckboxes">
+                            <p class="empty-selection">Aucun repas planifié cette semaine.</p>
+                        </div>
+                    </div>
                     <div class="shopping-content" id="shoppingContent">
-                        <p class="empty-shopping">Cliquez sur "Générer la liste" pour créer votre liste de courses.</p>
+                        <p class="empty-shopping">Sélectionnez les repas ci-dessus et cliquez sur "Générer la liste".</p>
                     </div>
                 </div>
             </div>
@@ -106,7 +118,7 @@
     </div>
 
     <!-- Version -->
-    <div class="version-info">v2.3-step3-json</div>
+    <div class="version-info">v2.4-step4</div>
 
     <script src="config.js"></script>
     <script src="planning.js"></script>
