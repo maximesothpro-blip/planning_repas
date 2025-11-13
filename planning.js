@@ -759,7 +759,8 @@ async function displaySettingsCalendar() {
 
                 let boxClass = 'settings-meal-box';
                 if (!isCurrentWeek) {
-                    boxClass += ' other-week'; // Yellow for other weeks
+                    // Yellow for other weeks, with green border if included
+                    boxClass += isIncluded ? ' other-week-included' : ' other-week-excluded';
                 } else {
                     boxClass += isIncluded ? ' included' : ' excluded';
                 }
@@ -768,17 +769,20 @@ async function displaySettingsCalendar() {
                 mealBox.className = boxClass;
                 mealBox.textContent = recipeName;
                 mealBox.dataset.globalKey = globalKey;
+                mealBox.dataset.isCurrentWeek = isCurrentWeek;
 
                 // Toggle inclusion/exclusion
                 mealBox.addEventListener('click', () => {
                     mealInclusions[globalKey] = !mealInclusions[globalKey];
+                    const nowIncluded = mealInclusions[globalKey];
+                    const isCurrent = mealBox.dataset.isCurrentWeek === 'true';
 
                     // Update color
-                    if (!isCurrentWeek) {
-                        // Keep yellow for other weeks
-                        mealBox.className = 'settings-meal-box other-week';
+                    if (!isCurrent) {
+                        // Yellow for other weeks, border changes based on inclusion
+                        mealBox.className = `settings-meal-box ${nowIncluded ? 'other-week-included' : 'other-week-excluded'}`;
                     } else {
-                        mealBox.className = `settings-meal-box ${mealInclusions[globalKey] ? 'included' : 'excluded'}`;
+                        mealBox.className = `settings-meal-box ${nowIncluded ? 'included' : 'excluded'}`;
                     }
                 });
 
