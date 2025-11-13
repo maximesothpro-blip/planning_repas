@@ -472,6 +472,45 @@ body {
     font-size: 14px;
 }
 
+.shopping-list {
+    padding: 10px 0;
+}
+
+.shopping-list h3 {
+    font-size: 16px;
+    color: #667eea;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #667eea;
+}
+
+.shopping-category {
+    margin-bottom: 20px;
+}
+
+.shopping-category h4 {
+    font-size: 14px;
+    color: #333;
+    background: #f0f4ff;
+    padding: 8px 12px;
+    border-radius: 4px;
+    margin-bottom: 8px;
+}
+
+.shopping-category ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.shopping-category li {
+    padding: 6px 12px;
+    margin-bottom: 4px;
+    background: #fafafa;
+    border-left: 3px solid #667eea;
+    font-size: 13px;
+    color: #333;
+}
+
 /* ===== POPUP ===== */
 .recipe-popup {
     display: none;

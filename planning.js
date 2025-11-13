@@ -632,26 +632,110 @@ function generateShoppingList() {
         return;
     }
 
+    // Map pour agréger les ingrédients
+    const ingredientsMap = {};
+
     // Parcourir tous les repas planifiés de la semaine
     planning.forEach(item => {
         if (item.recipe && item.recipe.length > 0) {
             const recipeId = item.recipe[0];
             const recipe = recipes.find(r => r.id === recipeId);
 
-            if (recipe) {
-                console.log(`Recette trouvée: ${recipe.name}`);
-                shoppingList.push({
-                    name: recipe.name,
-                    day: item.day,
-                    meal: item.meal,
-                    category: 'Recettes planifiées'
+            if (recipe && recipe.ingredients) {
+                console.log(`Parsing ingrédients pour: ${recipe.name}`);
+                console.log(`Ingrédients bruts:`, recipe.ingredients);
+
+                // Parser les ingrédients (format texte, une ligne par ingrédient)
+                const ingredientLines = recipe.ingredients.split('\n').filter(line => line.trim());
+
+                ingredientLines.forEach(line => {
+                    const parsed = parseIngredient(line);
+                    if (parsed) {
+                        const key = parsed.name.toLowerCase();
+
+                        if (ingredientsMap[key]) {
+                            // Agréger les quantités
+                            ingredientsMap[key].quantity += parsed.quantity;
+                        } else {
+                            ingredientsMap[key] = {
+                                name: parsed.name,
+                                quantity: parsed.quantity,
+                                unit: parsed.unit,
+                                category: parsed.category || 'Autre'
+                            };
+                        }
+                    }
                 });
             }
         }
     });
 
+    // Convertir en tableau
+    shoppingList = Object.values(ingredientsMap);
+    console.log('Liste agrégée:', shoppingList);
+
     // Afficher la liste
     displayShoppingList();
+}
+
+// Parser une ligne d'ingrédient (ex: "200g de farine", "2 oeufs", "1 cuillère à soupe d'huile")
+function parseIngredient(line) {
+    line = line.trim();
+    if (!line) return null;
+
+    // Patterns de parsing
+    // Pattern 1: "200g de farine" ou "200 g farine"
+    let match = line.match(/^(\d+(?:[.,]\d+)?)\s*([a-zA-Zéè]+)?\s*(?:de|d')?\s*(.+)$/i);
+
+    if (match) {
+        return {
+            quantity: parseFloat(match[1].replace(',', '.')),
+            unit: match[2] || 'unité',
+            name: match[3].trim(),
+            category: categorizeIngredient(match[3].trim())
+        };
+    }
+
+    // Pattern 2: Juste le nom (ex: "Sel", "Poivre")
+    return {
+        quantity: 1,
+        unit: 'unité',
+        name: line,
+        category: categorizeIngredient(line)
+    };
+}
+
+// Catégoriser un ingrédient (simple pour l'instant)
+function categorizeIngredient(name) {
+    const nameLower = name.toLowerCase();
+
+    if (nameLower.includes('tomate') || nameLower.includes('salade') || nameLower.includes('carotte') ||
+        nameLower.includes('oignon') || nameLower.includes('légume') || nameLower.includes('courgette') ||
+        nameLower.includes('poivron') || nameLower.includes('pomme de terre')) {
+        return 'Fruits & Légumes';
+    }
+
+    if (nameLower.includes('poulet') || nameLower.includes('boeuf') || nameLower.includes('porc') ||
+        nameLower.includes('viande') || nameLower.includes('poisson') || nameLower.includes('saumon')) {
+        return 'Viandes & Poissons';
+    }
+
+    if (nameLower.includes('lait') || nameLower.includes('fromage') || nameLower.includes('yaourt') ||
+        nameLower.includes('beurre') || nameLower.includes('crème')) {
+        return 'Produits Laitiers';
+    }
+
+    if (nameLower.includes('farine') || nameLower.includes('pâtes') || nameLower.includes('riz') ||
+        nameLower.includes('pain') || nameLower.includes('céréale')) {
+        return 'Féculents';
+    }
+
+    if (nameLower.includes('huile') || nameLower.includes('sel') || nameLower.includes('poivre') ||
+        nameLower.includes('épice') || nameLower.includes('sucre')) {
+        return 'Épicerie';
+    }
+
+    return 'Autre';
 }
 
 // Afficher la liste de courses
@@ -663,14 +747,39 @@ function displayShoppingList() {
         return;
     }
 
-    // Générer le HTML simple
-    let html = '<div class="shopping-list"><h3>Repas planifiés cette semaine :</h3><ul>';
-
+    // Grouper par catégorie
+    const byCategory = {};
     shoppingList.forEach(item => {
-        html += `<li>${item.day} - ${item.meal} : ${item.name}</li>`;
+        if (!byCategory[item.category]) {
+            byCategory[item.category] = [];
+        }
+        byCategory[item.category].push(item);
     });
 
-    html += '</ul></div>';
+    // Générer le HTML avec catégories
+    let html = '<div class="shopping-list">';
+    html += '<h3>Liste de courses</h3>';
+
+    // Trier les catégories
+    const categories = Object.keys(byCategory).sort();
+
+    categories.forEach(category => {
+        html += `<div class="shopping-category">`;
+        html += `<h4>${category}</h4>`;
+        html += `<ul>`;
+
+        byCategory[category].forEach(item => {
+            const quantityStr = item.quantity % 1 === 0
+                ? item.quantity
+                : item.quantity.toFixed(1);
+            html += `<li>${quantityStr} ${item.unit} ${item.name}</li>`;
+        });
+
+        html += `</ul>`;
+        html += `</div>`;
+    });
+
+    html += '</div>';
 
     shoppingContent.innerHTML = html;
 }
