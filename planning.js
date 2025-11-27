@@ -835,9 +835,12 @@ async function initializeShoppingList() {
             currentShoppingListId = existingList.id;
             console.log('Loaded existing shopping list:', currentShoppingListId);
         } else {
-            // New week → Create empty list
+            // New week or first time → Create list and populate from existing planning
             console.log('Creating new shopping list for week', currentWeek);
             await createEmptyShoppingList(currentWeek, currentYear);
+
+            // Populate with existing planning meals
+            await populateShoppingListFromPlanning();
         }
 
         // Display the list from Airtable
@@ -1020,6 +1023,55 @@ function mergeIngredients(existing, newOnes) {
     });
 
     return Object.values(map);
+}
+
+// Populate shopping list from existing planning
+async function populateShoppingListFromPlanning() {
+    try {
+        console.log('Populating shopping list from existing planning...');
+
+        // Get current week planning
+        const weekKey = `${currentWeek}-${currentYear}`;
+        const weekPlanning = allWeeksPlanning[weekKey] || planning;
+
+        if (!weekPlanning || weekPlanning.length === 0) {
+            console.log('No meals in planning yet');
+            return;
+        }
+
+        let allIngredients = [];
+
+        // Loop through all planning items
+        for (const item of weekPlanning) {
+            if (item.recipe && item.recipe.length > 0) {
+                const recipeId = item.recipe[0];
+                const recipe = recipes.find(r => r.id === recipeId);
+
+                if (recipe) {
+                    const ingredients = parseRecipeIngredients(recipe);
+                    allIngredients = allIngredients.concat(ingredients);
+                    console.log(`Added ${ingredients.length} ingredients from ${recipe.name}`);
+                }
+            }
+        }
+
+        if (allIngredients.length === 0) {
+            console.log('No ingredients found in planning');
+            return;
+        }
+
+        // Merge all ingredients
+        const mergedIngredients = mergeIngredients([], allIngredients);
+        console.log(`Total merged ingredients: ${mergedIngredients.length}`);
+
+        // Update shopping list in Airtable
+        await updateShoppingListInAirtable(currentShoppingListId, mergedIngredients, {});
+
+        console.log('✅ Shopping list populated from planning');
+
+    } catch (error) {
+        console.error('Error populating shopping list from planning:', error);
+    }
 }
 
 // Add meal ingredients to shopping list (auto-update on drop)
