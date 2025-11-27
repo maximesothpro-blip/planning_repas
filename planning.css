@@ -465,6 +465,30 @@ body {
     background: #10b981;
 }
 
+.save-status {
+    display: inline-block;
+    padding: 10px 15px;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 6px;
+    transition: all 0.3s;
+}
+
+.save-status.saving {
+    color: #667eea;
+    background: #e0e7ff;
+}
+
+.save-status.saved {
+    color: #10b981;
+    background: #d1fae5;
+}
+
+.save-status.error {
+    color: #ef4444;
+    background: #fee2e2;
+}
+
 .generate-list-btn:hover, .settings-btn:hover {
     background: #5568d3;
 }

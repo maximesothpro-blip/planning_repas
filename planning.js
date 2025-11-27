@@ -12,6 +12,11 @@ let settingsWeek = currentWeek; // Week currently displayed in settings popup
 let settingsYear = currentYear;
 let mealInclusions = {}; // Track which meals are included (green) or excluded (red)
 
+// Shopping list management
+let currentShoppingListId = null; // Airtable record ID of current list
+let autoSaveTimer = null; // Timer for auto-save debounce
+let isSaving = false; // Track save status
+
 // Éléments DOM
 const recipesList = document.getElementById('recipesList');
 const calendar = document.getElementById('calendar');
@@ -640,6 +645,176 @@ function setupEventListeners() {
     // Déjà fait dans le code ci-dessus
 }
 
+// ===== SHOPPING LIST AIRTABLE FUNCTIONS =====
+
+// Save shopping list to Airtable
+async function saveShoppingListToAirtable(ingredients, repasInclus, week, year) {
+    try {
+        setSaveStatus('saving');
+
+        const response = await fetch(`${API_URL}/api/shopping-list`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                nom: `Liste semaine ${week} - ${year}`,
+                semaine: week,
+                annee: year,
+                ingredients: ingredients,
+                repasInclus: repasInclus,
+                statut: 'Active'
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        currentShoppingListId = data.shoppingList.id;
+
+        console.log('Shopping list saved to Airtable:', currentShoppingListId);
+        setSaveStatus('saved');
+
+        return data.shoppingList;
+    } catch (error) {
+        console.error('Error saving shopping list:', error);
+        setSaveStatus('error');
+        throw error;
+    }
+}
+
+// Update shopping list in Airtable
+async function updateShoppingListInAirtable(listId, ingredients, repasInclus) {
+    try {
+        setSaveStatus('saving');
+
+        const response = await fetch(`${API_URL}/api/shopping-list/${listId}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                ingredients: ingredients,
+                repasInclus: repasInclus
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('Shopping list updated in Airtable');
+        setSaveStatus('saved');
+
+        return data.shoppingList;
+    } catch (error) {
+        console.error('Error updating shopping list:', error);
+        setSaveStatus('error');
+        throw error;
+    }
+}
+
+// Load shopping list from Airtable
+async function loadShoppingListFromAirtable(week, year) {
+    try {
+        // Get all shopping lists and find the one matching week/year
+        const response = await fetch(`${API_URL}/api/shopping-lists`);
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const lists = data.shoppingLists;
+
+        // Find active list for this week
+        const matchingList = lists.find(list =>
+            list.semaine === week &&
+            list.annee === year &&
+            (list.statut === 'Active' || list.statut === 'Brouillon')
+        );
+
+        if (matchingList) {
+            currentShoppingListId = matchingList.id;
+            shoppingList = JSON.parse(matchingList.ingredientsJSON || '[]');
+            mealInclusions = JSON.parse(matchingList.repasInclusJSON || '{}');
+
+            console.log('Shopping list loaded from Airtable:', matchingList.id);
+            return matchingList;
+        }
+
+        return null;
+    } catch (error) {
+        console.error('Error loading shopping list:', error);
+        return null;
+    }
+}
+
+// Delete shopping list from Airtable
+async function deleteShoppingListFromAirtable(listId) {
+    try {
+        const response = await fetch(`${API_URL}/api/shopping-list/${listId}`, {
+            method: 'DELETE'
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        console.log('Shopping list deleted from Airtable');
+        currentShoppingListId = null;
+
+        return true;
+    } catch (error) {
+        console.error('Error deleting shopping list:', error);
+        throw error;
+    }
+}
+
+// Debounced auto-save
+function scheduleAutoSave() {
+    // Clear existing timer
+    if (autoSaveTimer) {
+        clearTimeout(autoSaveTimer);
+    }
+
+    // Schedule new save in 30 seconds
+    autoSaveTimer = setTimeout(async () => {
+        if (currentShoppingListId && shoppingList.length > 0) {
+            console.log('Auto-saving shopping list...');
+            await updateShoppingListInAirtable(currentShoppingListId, shoppingList, mealInclusions);
+        }
+    }, 30000); // 30 seconds
+}
+
+// Set save status indicator
+function setSaveStatus(status) {
+    isSaving = status === 'saving';
+
+    // Update UI indicator (we'll add this to HTML later)
+    const statusIndicator = document.getElementById('saveStatus');
+    if (statusIndicator) {
+        if (status === 'saving') {
+            statusIndicator.textContent = '💾 Sauvegarde...';
+            statusIndicator.className = 'save-status saving';
+        } else if (status === 'saved') {
+            statusIndicator.textContent = '✓ Sauvegardé';
+            statusIndicator.className = 'save-status saved';
+            // Hide after 2 seconds
+            setTimeout(() => {
+                statusIndicator.textContent = '';
+                statusIndicator.className = 'save-status';
+            }, 2000);
+        } else if (status === 'error') {
+            statusIndicator.textContent = '❌ Erreur';
+            statusIndicator.className = 'save-status error';
+        }
+    }
+}
+
 // ===== GESTION DES ONGLETS =====
 function setupTabs() {
     const tabBtns = document.querySelectorAll('.tab-btn');
@@ -864,6 +1039,7 @@ function displayEditableShoppingList() {
         input.addEventListener('change', (e) => {
             const index = parseInt(e.target.closest('.editable-ingredient').dataset.index);
             shoppingList[index].quantity = parseFloat(e.target.value) || 0;
+            scheduleAutoSave(); // Auto-save après modification
         });
     });
 
@@ -871,6 +1047,7 @@ function displayEditableShoppingList() {
         select.addEventListener('change', (e) => {
             const index = parseInt(e.target.closest('.editable-ingredient').dataset.index);
             shoppingList[index].unit = e.target.value;
+            scheduleAutoSave(); // Auto-save après modification
         });
     });
 
@@ -880,14 +1057,25 @@ function displayEditableShoppingList() {
             shoppingList.splice(index, 1);
             displayEditableShoppingList();
             displayShoppingList(); // Update main display
+            scheduleAutoSave(); // Auto-save après suppression
         });
     });
 }
 
 // Clear shopping list
-clearListBtn.addEventListener('click', () => {
+clearListBtn.addEventListener('click', async () => {
     if (confirm('Voulez-vous vraiment vider la liste de courses ?')) {
+        // Delete from Airtable if exists
+        if (currentShoppingListId) {
+            try {
+                await deleteShoppingListFromAirtable(currentShoppingListId);
+            } catch (error) {
+                console.error('Error deleting from Airtable:', error);
+            }
+        }
+
         shoppingList = [];
+        currentShoppingListId = null;
         shoppingContent.innerHTML = '<p class="empty-shopping">La liste a été vidée.</p>';
     }
 });
@@ -929,13 +1117,17 @@ settingsSelectNone.addEventListener('click', () => {
 });
 
 // Générer la liste de courses
-generateListBtn.addEventListener('click', () => {
+generateListBtn.addEventListener('click', async () => {
     console.log('Génération de la liste de courses...');
     initializeMealInclusions(); // Reset to all included
-    generateShoppingList();
+
+    // Fetch fresh planning from Airtable before generating
+    await loadPlanningForWeek(currentWeek, currentYear);
+
+    await generateShoppingList();
 });
 
-function generateShoppingList() {
+async function generateShoppingList() {
     shoppingList = [];
 
     console.log('=== DEBUG GÉNÉRATION LISTE ===');
@@ -1046,6 +1238,15 @@ function generateShoppingList() {
     // Convertir en tableau
     shoppingList = Object.values(ingredientsMap);
     console.log('Liste agrégée:', shoppingList);
+
+    // Sauvegarder dans Airtable
+    try {
+        await saveShoppingListToAirtable(shoppingList, mealInclusions, currentWeek, currentYear);
+        console.log('Liste sauvegardée dans Airtable avec succès');
+    } catch (error) {
+        console.error('Erreur lors de la sauvegarde dans Airtable:', error);
+        alert('Erreur lors de la sauvegarde de la liste. Vérifiez votre connexion.');
+    }
 
     // Afficher la liste
     displayShoppingList();
