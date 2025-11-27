@@ -1182,18 +1182,55 @@ shoppingSettingsPopup.addEventListener('click', (e) => {
 });
 
 // Apply and close
-applySettings.addEventListener('click', () => {
-    generateShoppingList();
+applySettings.addEventListener('click', async () => {
+    await applySettingsAndSave();
     shoppingSettingsPopup.classList.remove('active');
 });
 
-// Initialize settings popup
-function initializeSettingsPopup() {
-    // Display planning grid
-    displaySettingsCalendar();
+// Initialize settings popup (v3.2 - Airtable version)
+async function initializeSettingsPopup() {
+    try {
+        // Load meal inclusions from Airtable
+        await loadMealInclusionsFromAirtable();
 
-    // Display current shopping list for editing
-    displayEditableShoppingList();
+        // Display planning grid
+        await displaySettingsCalendar();
+
+        // Load and display current shopping list for editing from Airtable
+        await displayEditableShoppingListFromAirtable();
+    } catch (error) {
+        console.error('Error initializing settings popup:', error);
+    }
+}
+
+// Load meal inclusions from Airtable (v3.2)
+async function loadMealInclusionsFromAirtable() {
+    try {
+        if (!currentShoppingListId) {
+            // No list exists, initialize all as included
+            initializeMealInclusions();
+            return;
+        }
+
+        // Fetch current shopping list
+        const response = await fetch(`${API_URL}/api/shopping-list/${currentShoppingListId}`);
+        const data = await response.json();
+
+        if (data.success) {
+            const savedInclusions = JSON.parse(data.shoppingList.repasInclusJSON || '{}');
+
+            // Merge with current mealInclusions
+            mealInclusions = { ...mealInclusions, ...savedInclusions };
+
+            console.log('Loaded meal inclusions from Airtable:', Object.keys(savedInclusions).length, 'items');
+        } else {
+            // Fallback to default
+            initializeMealInclusions();
+        }
+    } catch (error) {
+        console.error('Error loading meal inclusions:', error);
+        initializeMealInclusions();
+    }
 }
 
 // Display planning in settings popup
@@ -1263,7 +1300,7 @@ async function displaySettingsCalendar() {
                 mealBox.dataset.isCurrentWeek = isCurrentWeek;
 
                 // Toggle inclusion/exclusion
-                mealBox.addEventListener('click', () => {
+                mealBox.addEventListener('click', async () => {
                     mealInclusions[globalKey] = !mealInclusions[globalKey];
                     const nowIncluded = mealInclusions[globalKey];
                     const isCurrent = mealBox.dataset.isCurrentWeek === 'true';
@@ -1275,6 +1312,9 @@ async function displaySettingsCalendar() {
                     } else {
                         mealBox.className = `settings-meal-box ${nowIncluded ? 'included' : 'excluded'}`;
                     }
+
+                    // v3.2: Update editable list in real-time
+                    await updateEditableListPreview();
                 });
 
                 const infoBtn = document.createElement('button');
@@ -1376,6 +1416,184 @@ function displayEditableShoppingList() {
             scheduleAutoSave(); // Auto-save après suppression
         });
     });
+}
+
+// ===== V3.2 - SETTINGS POPUP AIRTABLE FUNCTIONS =====
+
+// Display editable shopping list from Airtable (v3.2)
+async function displayEditableShoppingListFromAirtable() {
+    try {
+        if (!currentShoppingListId) {
+            settingsListContent.innerHTML = '<p class="empty-shopping">Aucune liste disponible.</p>';
+            return;
+        }
+
+        // Fetch current shopping list from Airtable
+        const response = await fetch(`${API_URL}/api/shopping-list/${currentShoppingListId}`);
+        const data = await response.json();
+
+        if (!data.success) {
+            throw new Error('Failed to load shopping list');
+        }
+
+        const list = data.shoppingList;
+        const ingredients = JSON.parse(list.ingredientsJSON || '[]');
+
+        if (ingredients.length === 0) {
+            settingsListContent.innerHTML = '<p class="empty-shopping">Liste vide.</p>';
+            return;
+        }
+
+        displayEditableIngredients(ingredients);
+
+    } catch (error) {
+        console.error('Error displaying editable list from Airtable:', error);
+        settingsListContent.innerHTML = '<p class="empty-shopping">Erreur de chargement.</p>';
+    }
+}
+
+// Display ingredients as editable list
+function displayEditableIngredients(ingredients) {
+    // Group by category
+    const byCategory = {};
+    ingredients.forEach((item, index) => {
+        const category = item.category || 'Autre';
+        if (!byCategory[category]) {
+            byCategory[category] = [];
+        }
+        byCategory[category].push({ ...item, index });
+    });
+
+    let html = '<div class="editable-shopping-list">';
+
+    const categories = Object.keys(byCategory).sort();
+    categories.forEach(category => {
+        html += `<div class="shopping-category">`;
+        html += `<h4>${category}</h4>`;
+
+        byCategory[category].forEach(item => {
+            const quantityStr = item.quantity % 1 === 0 ? item.quantity : item.quantity.toFixed(1);
+            html += `
+                <div class="editable-ingredient" data-index="${item.index}">
+                    <input type="number" class="ingredient-qty" value="${quantityStr}" step="0.1" min="0" data-index="${item.index}">
+                    <select class="ingredient-unit" data-index="${item.index}">
+                        <option value="g" ${item.unit === 'g' ? 'selected' : ''}>g</option>
+                        <option value="kg" ${item.unit === 'kg' ? 'selected' : ''}>kg</option>
+                        <option value="ml" ${item.unit === 'ml' ? 'selected' : ''}>ml</option>
+                        <option value="L" ${item.unit === 'L' ? 'selected' : ''}>L</option>
+                        <option value="c.à.s" ${item.unit === 'c.à.s' ? 'selected' : ''}>c.à.s</option>
+                        <option value="c.à.c" ${item.unit === 'c.à.c' ? 'selected' : ''}>c.à.c</option>
+                        <option value="pièce" ${item.unit === 'pièce' ? 'selected' : ''}>pièce</option>
+                        <option value="pincée" ${item.unit === 'pincée' ? 'selected' : ''}>pincée</option>
+                        <option value="unité" ${item.unit === 'unité' ? 'selected' : ''}>unité</option>
+                    </select>
+                    <span class="ingredient-name">${item.name}</span>
+                    <button class="ingredient-delete-btn" data-index="${item.index}">🗑️</button>
+                </div>
+            `;
+        });
+
+        html += `</div>`;
+    });
+
+    html += '</div>';
+    settingsListContent.innerHTML = html;
+
+    // Add event listeners (modifications are kept in memory until "Apply")
+    attachEditableListeners();
+}
+
+// Attach event listeners to editable ingredients
+function attachEditableListeners() {
+    // Note: We don't save to Airtable here, just update the DOM
+    // Actual save happens when clicking "Apply"
+
+    document.querySelectorAll('.ingredient-delete-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.target.closest('.editable-ingredient').remove();
+        });
+    });
+}
+
+// Update editable list preview based on meal inclusions (v3.2)
+async function updateEditableListPreview() {
+    try {
+        const weekKey = `${currentWeek}-${currentYear}`;
+        const weekPlanning = allWeeksPlanning[weekKey] || planning;
+
+        if (!weekPlanning || weekPlanning.length === 0) {
+            settingsListContent.innerHTML = '<p class="empty-shopping">Aucun repas planifié.</p>';
+            return;
+        }
+
+        let allIngredients = [];
+
+        // Loop through planning and only include selected meals
+        weekPlanning.forEach((item, index) => {
+            const globalKey = `${currentWeek}-${currentYear}-${index}`;
+            const isIncluded = mealInclusions[globalKey];
+
+            if (isIncluded && item.recipe && item.recipe.length > 0) {
+                const recipeId = item.recipe[0];
+                const recipe = recipes.find(r => r.id === recipeId);
+
+                if (recipe) {
+                    const ingredients = parseRecipeIngredients(recipe);
+                    allIngredients = allIngredients.concat(ingredients);
+                }
+            }
+        });
+
+        // Merge ingredients
+        const mergedIngredients = mergeIngredients([], allIngredients);
+
+        // Display
+        if (mergedIngredients.length === 0) {
+            settingsListContent.innerHTML = '<p class="empty-shopping">Aucun repas sélectionné.</p>';
+        } else {
+            displayEditableIngredients(mergedIngredients);
+        }
+
+    } catch (error) {
+        console.error('Error updating editable list preview:', error);
+    }
+}
+
+// Apply settings and save to Airtable (v3.2)
+async function applySettingsAndSave() {
+    try {
+        console.log('Applying settings and saving to Airtable...');
+
+        // Collect modified ingredients from the editable list
+        const modifiedIngredients = [];
+        document.querySelectorAll('.editable-ingredient').forEach(el => {
+            const qty = parseFloat(el.querySelector('.ingredient-qty').value) || 0;
+            const unit = el.querySelector('.ingredient-unit').value;
+            const name = el.querySelector('.ingredient-name').textContent;
+            const category = el.closest('.shopping-category')?.querySelector('h4')?.textContent || 'Autre';
+
+            if (qty > 0) {
+                modifiedIngredients.push({
+                    name,
+                    quantity: qty,
+                    unit,
+                    category
+                });
+            }
+        });
+
+        // Save to Airtable
+        await updateShoppingListInAirtable(currentShoppingListId, modifiedIngredients, mealInclusions);
+
+        // Refresh main display
+        await displayShoppingListFromAirtable();
+
+        console.log('✅ Settings saved to Airtable');
+
+    } catch (error) {
+        console.error('Error applying settings:', error);
+        alert('Erreur lors de la sauvegarde. Veuillez réessayer.');
+    }
 }
 
 // Clear shopping list
