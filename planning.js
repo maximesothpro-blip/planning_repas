@@ -60,6 +60,8 @@ async function init() {
     await loadPlanning();
     createCalendar();
     displayPlanning();
+    // v3.1: Initialize shopping list from Airtable
+    await initializeShoppingList();
     initializeMealInclusions();
     setupEventListeners();
     setupTabs();
@@ -815,6 +817,208 @@ function setSaveStatus(status) {
     }
 }
 
+// ===== V3.1 - SHOPPING LIST REAL-TIME FUNCTIONS =====
+
+// Initialize shopping list on page load
+async function initializeShoppingList() {
+    try {
+        console.log('Initializing shopping list for week', currentWeek, currentYear);
+
+        // Check if list exists for current week
+        const existingList = await loadShoppingListFromAirtable(currentWeek, currentYear);
+
+        if (existingList) {
+            // List exists → Load and display
+            currentShoppingListId = existingList.id;
+            console.log('Loaded existing shopping list:', currentShoppingListId);
+        } else {
+            // New week → Create empty list
+            console.log('Creating new shopping list for week', currentWeek);
+            await createEmptyShoppingList(currentWeek, currentYear);
+        }
+
+        // Display the list from Airtable
+        await displayShoppingListFromAirtable();
+
+    } catch (error) {
+        console.error('Error initializing shopping list:', error);
+    }
+}
+
+// Create empty shopping list for new week
+async function createEmptyShoppingList(week, year) {
+    try {
+        const response = await fetch(`${API_URL}/api/shopping-list`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                nom: `Liste semaine ${week} - ${year}`,
+                semaine: week,
+                annee: year,
+                ingredients: [],
+                repasInclus: {},
+                statut: 'Active'
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        currentShoppingListId = data.shoppingList.id;
+
+        console.log('Created empty shopping list:', currentShoppingListId);
+        return data.shoppingList;
+    } catch (error) {
+        console.error('Error creating empty shopping list:', error);
+        throw error;
+    }
+}
+
+// Display shopping list from Airtable (not from cache)
+async function displayShoppingListFromAirtable() {
+    try {
+        if (!currentShoppingListId) {
+            shoppingContent.innerHTML = '<p class="empty-shopping">Aucune liste de courses disponible.</p>';
+            return;
+        }
+
+        // Fetch list from Airtable
+        const response = await fetch(`${API_URL}/api/shopping-list/${currentShoppingListId}`);
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const list = data.shoppingList;
+
+        // Parse ingredients JSON
+        const ingredients = JSON.parse(list.ingredientsJSON || '[]');
+
+        console.log('Displaying shopping list from Airtable:', ingredients.length, 'items');
+
+        if (ingredients.length === 0) {
+            shoppingContent.innerHTML = '<p class="empty-shopping">Aucun repas planifié pour cette semaine.</p>';
+            return;
+        }
+
+        // Group by category
+        const byCategory = {};
+        ingredients.forEach(item => {
+            if (!byCategory[item.category]) {
+                byCategory[item.category] = [];
+            }
+            byCategory[item.category].push(item);
+        });
+
+        // Generate HTML with categories
+        let html = '<div class="shopping-list">';
+        html += '<h3>Liste de courses</h3>';
+
+        // Sort categories
+        const categories = Object.keys(byCategory).sort();
+
+        categories.forEach(category => {
+            html += `<div class="shopping-category">`;
+            html += `<h4>${category}</h4>`;
+            html += `<ul>`;
+
+            byCategory[category].forEach(item => {
+                const quantityStr = item.quantity % 1 === 0
+                    ? item.quantity
+                    : item.quantity.toFixed(1);
+                html += `<li>${quantityStr} ${item.unit} ${item.name}</li>`;
+            });
+
+            html += `</ul>`;
+            html += `</div>`;
+        });
+
+        html += '</div>';
+
+        shoppingContent.innerHTML = html;
+
+    } catch (error) {
+        console.error('Error displaying shopping list from Airtable:', error);
+        shoppingContent.innerHTML = '<p class="empty-shopping">Erreur lors du chargement de la liste.</p>';
+    }
+}
+
+// Parse recipe ingredients to standard format
+function parseRecipeIngredients(recipe) {
+    if (!recipe || !recipe.ingredients) {
+        return [];
+    }
+
+    try {
+        let ingredientsList;
+
+        if (typeof recipe.ingredients === 'string') {
+            ingredientsList = JSON.parse(recipe.ingredients);
+        } else {
+            ingredientsList = recipe.ingredients;
+        }
+
+        if (!Array.isArray(ingredientsList)) {
+            return [];
+        }
+
+        const parsedIngredients = [];
+
+        ingredientsList.forEach(item => {
+            // Support both 'ingredient' and 'nom' fields
+            const name = item.ingredient || item.nom;
+
+            if (!name) {
+                console.warn('Item sans nom d\'ingrédient:', item);
+                return;
+            }
+
+            parsedIngredients.push({
+                name: name,
+                quantity: parseFloat(item.quantite) || 0,
+                unit: item.unite || 'unité',
+                category: categorizeIngredient(name)
+            });
+        });
+
+        return parsedIngredients;
+
+    } catch (error) {
+        console.error('Error parsing recipe ingredients:', error);
+        return [];
+    }
+}
+
+// Merge and aggregate ingredients
+function mergeIngredients(existing, newOnes) {
+    const map = {};
+
+    // Add existing ingredients to map
+    existing.forEach(item => {
+        const key = `${item.name.toLowerCase()}_${item.unit}`;
+        map[key] = { ...item };
+    });
+
+    // Merge new ingredients
+    newOnes.forEach(item => {
+        const key = `${item.name.toLowerCase()}_${item.unit}`;
+        if (map[key]) {
+            // Same ingredient + unit → Add quantities
+            map[key].quantity += item.quantity;
+        } else {
+            // New ingredient
+            map[key] = { ...item };
+        }
+    });
+
+    return Object.values(map);
+}
+
 // ===== GESTION DES ONGLETS =====
 function setupTabs() {
     const tabBtns = document.querySelectorAll('.tab-btn');
@@ -1116,15 +1320,10 @@ settingsSelectNone.addEventListener('click', () => {
     displaySettingsCalendar();
 });
 
-// Générer la liste de courses
+// Rafraîchir la liste de courses depuis Airtable
 generateListBtn.addEventListener('click', async () => {
-    console.log('Génération de la liste de courses...');
-    initializeMealInclusions(); // Reset to all included
-
-    // Fetch fresh planning from Airtable before generating
-    await loadPlanningForWeek(currentWeek, currentYear);
-
-    await generateShoppingList();
+    console.log('Rafraîchissement de la liste depuis Airtable...');
+    await displayShoppingListFromAirtable();
 });
 
 async function generateShoppingList() {
