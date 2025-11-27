@@ -935,9 +935,12 @@ async function displayShoppingListFromAirtable() {
             byCategory[item.category].push(item);
         });
 
+        // v3.3.2: Display list name from Airtable (includes "- Modifié" if modified)
+        const listName = list.nom || `Liste semaine ${currentWeek} - ${currentYear}`;
+
         // Generate HTML with categories
         let html = '<div class="shopping-list">';
-        html += '<h3>Liste de courses</h3>';
+        html += `<h3>${listName}</h3>`;
 
         // Sort categories
         const categories = Object.keys(byCategory).sort();
@@ -2033,12 +2036,14 @@ async function displayShoppingHistory() {
             return;
         }
 
-        // Display historical lists
+        // Display historical lists (v3.3.2: show full name with "Modifié" if applicable)
         let html = '';
         historicalLists.forEach(list => {
+            // Use the full name from Airtable (includes "- Modifié" if modified)
+            const displayName = list.nom || `Liste semaine ${list.semaine} - ${list.annee}`;
             html += `
                 <div class="history-item" data-list-id="${list.id}">
-                    <div class="history-item-title">📋 Semaine ${list.semaine} - ${list.annee}</div>
+                    <div class="history-item-title">📋 ${displayName}</div>
                     <div class="history-item-info">${list.nbItems} articles</div>
                 </div>
             `;
