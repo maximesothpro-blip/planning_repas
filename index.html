@@ -94,9 +94,25 @@
                     <div class="shopping-content" id="shoppingContent">
                         <p class="empty-shopping">Cliquez sur "Générer la liste" pour créer votre liste de courses.</p>
                     </div>
+                    <!-- Shopping History Section -->
+                    <div class="shopping-history" id="shoppingHistory">
+                        <h3>📋 Listes précédentes</h3>
+                        <div class="history-items" id="historyItems">
+                            <p class="loading">Chargement...</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </aside>
+    </div>
+
+    <!-- Popup pour l'historique des listes de courses (gauche) -->
+    <div class="history-popup" id="historyPopup">
+        <div class="history-popup-content">
+            <button class="close-popup" id="closeHistoryPopup">×</button>
+            <h2 id="historyPopupTitle">Liste de courses</h2>
+            <div id="historyPopupBody"></div>
+        </div>
     </div>
 
     <!-- Popup pour les détails de recette -->
@@ -151,7 +167,7 @@
     </div>
 
     <!-- Version -->
-    <div class="version-info">v3.0.0</div>
+    <div class="version-info">v3.1.0</div>
 
     <script src="config.js"></script>
     <script src="planning.js"></script>

@@ -603,6 +603,8 @@ async function reloadWeek() {
     createCalendar();
     displayPlanning();
     initializeMealInclusions();
+    // v3.1: Reload shopping list for new week
+    await initializeShoppingList();
 }
 
 // ===== RECHERCHE DE RECETTES =====
@@ -845,6 +847,9 @@ async function initializeShoppingList() {
 
         // Display the list from Airtable
         await displayShoppingListFromAirtable();
+
+        // Load and display shopping history
+        await displayShoppingHistory();
 
     } catch (error) {
         console.error('Error initializing shopping list:', error);
@@ -1673,6 +1678,159 @@ function displayShoppingList() {
 
     shoppingContent.innerHTML = html;
 }
+
+// ===== SHOPPING HISTORY =====
+
+// Display shopping history (previous weeks' lists)
+async function displayShoppingHistory() {
+    const historyItems = document.getElementById('historyItems');
+
+    try {
+        console.log('Loading shopping history...');
+
+        // Fetch all shopping lists
+        const response = await fetch(`${API_URL}/api/shopping-lists`);
+        const data = await response.json();
+
+        if (!data.success) {
+            throw new Error('Failed to load shopping lists');
+        }
+
+        const allLists = data.shoppingLists;
+
+        // Filter out current week's list
+        const historicalLists = allLists.filter(list => {
+            return !(list.semaine === currentWeek && list.annee === currentYear);
+        });
+
+        // Sort by week/year (most recent first)
+        historicalLists.sort((a, b) => {
+            if (a.annee !== b.annee) return b.annee - a.annee;
+            return b.semaine - a.semaine;
+        });
+
+        console.log(`Found ${historicalLists.length} historical lists`);
+
+        if (historicalLists.length === 0) {
+            historyItems.innerHTML = '<p class="empty-shopping" style="padding: 10px; font-size: 12px;">Aucune liste précédente</p>';
+            return;
+        }
+
+        // Display historical lists
+        let html = '';
+        historicalLists.forEach(list => {
+            html += `
+                <div class="history-item" data-list-id="${list.id}">
+                    <div class="history-item-title">📋 Semaine ${list.semaine} - ${list.annee}</div>
+                    <div class="history-item-info">${list.nbItems} articles</div>
+                </div>
+            `;
+        });
+
+        historyItems.innerHTML = html;
+
+        // Add click event listeners to history items
+        const historyItemEls = document.querySelectorAll('.history-item');
+        historyItemEls.forEach(item => {
+            item.addEventListener('click', () => {
+                const listId = item.dataset.listId;
+                showHistoricalList(listId);
+            });
+        });
+
+    } catch (error) {
+        console.error('Error loading shopping history:', error);
+        historyItems.innerHTML = '<p class="empty-shopping" style="padding: 10px; font-size: 12px;">Erreur de chargement</p>';
+    }
+}
+
+// Show a historical shopping list in left popup
+async function showHistoricalList(listId) {
+    const historyPopup = document.getElementById('historyPopup');
+    const historyPopupTitle = document.getElementById('historyPopupTitle');
+    const historyPopupBody = document.getElementById('historyPopupBody');
+
+    try {
+        console.log('Loading historical list:', listId);
+
+        // Fetch list from Airtable
+        const response = await fetch(`${API_URL}/api/shopping-list/${listId}`);
+        const data = await response.json();
+
+        if (!data.success) {
+            throw new Error('Failed to load shopping list');
+        }
+
+        const list = data.shoppingList;
+
+        // Update title
+        historyPopupTitle.textContent = `Liste Semaine ${list.semaine} - ${list.annee}`;
+
+        // Parse ingredients
+        const ingredients = JSON.parse(list.ingredientsJSON || '[]');
+
+        if (ingredients.length === 0) {
+            historyPopupBody.innerHTML = '<p class="empty-shopping">Liste vide</p>';
+        } else {
+            // Group by category
+            const byCategory = {};
+            ingredients.forEach(item => {
+                const category = item.category || 'Autre';
+                if (!byCategory[category]) {
+                    byCategory[category] = [];
+                }
+                byCategory[category].push(item);
+            });
+
+            // Generate HTML
+            let html = '<div class="shopping-list">';
+
+            const categories = Object.keys(byCategory).sort();
+
+            categories.forEach(category => {
+                html += `<div class="shopping-category">`;
+                html += `<h4>${category}</h4>`;
+                html += `<ul>`;
+
+                byCategory[category].forEach(item => {
+                    const quantityStr = item.quantity % 1 === 0
+                        ? item.quantity
+                        : item.quantity.toFixed(1);
+                    html += `<li>${quantityStr} ${item.unit} ${item.name}</li>`;
+                });
+
+                html += `</ul>`;
+                html += `</div>`;
+            });
+
+            html += '</div>';
+
+            historyPopupBody.innerHTML = html;
+        }
+
+        // Show popup
+        historyPopup.classList.add('active');
+
+    } catch (error) {
+        console.error('Error loading historical list:', error);
+        alert('Erreur lors du chargement de la liste');
+    }
+}
+
+// Close history popup
+const closeHistoryPopup = document.getElementById('closeHistoryPopup');
+const historyPopup = document.getElementById('historyPopup');
+
+closeHistoryPopup.addEventListener('click', () => {
+    historyPopup.classList.remove('active');
+});
+
+// Close on outside click
+historyPopup.addEventListener('click', (e) => {
+    if (e.target === historyPopup) {
+        historyPopup.classList.remove('active');
+    }
+});
 
 // ===== DÉMARRAGE =====
 init();

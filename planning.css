@@ -553,6 +553,103 @@ body {
     color: #333;
 }
 
+/* ===== SHOPPING HISTORY ===== */
+.shopping-history {
+    padding: 15px;
+    border-top: 2px solid #ddd;
+    background: #f8fafc;
+}
+
+.shopping-history h3 {
+    font-size: 14px;
+    color: #667eea;
+    margin-bottom: 10px;
+}
+
+.history-items {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.history-item {
+    padding: 10px 12px;
+    background: white;
+    border-radius: 6px;
+    border-left: 3px solid #667eea;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.history-item:hover {
+    background: #e0e7ff;
+    transform: translateX(2px);
+}
+
+.history-item-title {
+    font-size: 13px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 4px;
+}
+
+.history-item-info {
+    font-size: 11px;
+    color: #666;
+}
+
+/* ===== HISTORY POPUP (LEFT SIDE) ===== */
+.history-popup {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 2500;
+    align-items: center;
+    justify-content: flex-start;
+    padding-left: 50px;
+}
+
+.history-popup.active {
+    display: flex;
+}
+
+.history-popup-content {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    width: 450px;
+    max-height: 85vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+}
+
+.history-popup-content h2 {
+    margin-bottom: 20px;
+    color: #667eea;
+    font-size: 18px;
+}
+
+.history-popup-content .close-popup {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 30px;
+    cursor: pointer;
+    color: #999;
+}
+
+.history-popup-content .close-popup:hover {
+    color: #333;
+}
+
 /* ===== POPUP ===== */
 .recipe-popup {
     display: none;
