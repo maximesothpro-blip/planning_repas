@@ -989,13 +989,14 @@ function generateShoppingList() {
 
                             if (Array.isArray(ingredientsList)) {
                                 ingredientsList.forEach(item => {
+                                    // Support both 'ingredient' and 'nom' fields
+                                    const name = item.ingredient || item.nom;
+
                                     // Skip invalid items
-                                    if (!item.ingredient) {
+                                    if (!name) {
                                         console.warn('Item sans nom d\'ingrédient:', item);
                                         return;
                                     }
-
-                                    const name = item.ingredient;
                                     const quantity = parseFloat(item.quantite) || 0;
                                     const unit = item.unite || 'unité';
 
