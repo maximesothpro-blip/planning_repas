@@ -447,7 +447,8 @@ async function handleDrop(e) {
             plannedRecipeDiv.addEventListener('click', () => {
                 const recipe = recipes.find(r => r.id === recipeId);
                 if (recipe) {
-                    showRecipePopup(recipe);
+                    // v3.6: Pass recordId to show servings control
+                    showRecipePopup(recipe, recordId);
                 }
             });
 
