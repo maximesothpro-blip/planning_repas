@@ -434,6 +434,18 @@ async function handleDrop(e) {
                 }
             });
 
+            // v3.9: Add to planning array in memory
+            planning.push({
+                id: recordId,
+                day: day,
+                date: date,
+                meal: meal,
+                recipe: [recipeId],
+                servings: defaultServings,
+                status: 'Planifié'
+            });
+            console.log('✅ Added to planning array:', planning.length, 'meals');
+
             // Mettre à jour le résumé nutritionnel du jour
             updateDaySummary(day);
 
@@ -486,6 +498,13 @@ async function deleteRecipeFromPlanning(recordId, slot) {
             // Mettre à jour le résumé nutritionnel du jour
             const day = slot.dataset.day;
             updateDaySummary(day);
+
+            // v3.9: Remove from planning array in memory
+            const index = planning.findIndex(item => item.id === recordId);
+            if (index > -1) {
+                planning.splice(index, 1);
+                console.log('✅ Removed from planning array:', planning.length, 'meals remaining');
+            }
 
             // v3.9: Remove ingredients from shopping list
             if (recipeToRemove) {
