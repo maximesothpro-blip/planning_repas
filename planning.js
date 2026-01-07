@@ -65,9 +65,9 @@ async function init() {
     await loadPlanning();
     createCalendar();
     displayPlanning();
-    // v3.1: Initialize shopping list from Airtable
-    await initializeShoppingList();
-    initializeMealInclusions();
+    // v3.8: Shopping list disabled for rebuild
+    // await initializeShoppingList();
+    // initializeMealInclusions();
     setupEventListeners();
     setupTabs();
 }
@@ -437,8 +437,8 @@ async function handleDrop(e) {
             // Mettre à jour le résumé nutritionnel du jour
             updateDaySummary(day);
 
-            // v3.1: Auto-update shopping list
-            await addMealToShoppingList(recipeId);
+            // v3.8: Shopping list disabled for rebuild
+            // await addMealToShoppingList(recipeId);
         } else {
             console.error('Failed to save to Airtable');
         }
@@ -469,8 +469,8 @@ async function deleteRecipeFromPlanning(recordId, slot) {
             const day = slot.dataset.day;
             updateDaySummary(day);
 
-            // v3.5.1: Régénérer la liste de courses automatiquement
-            await populateShoppingListFromPlanning();
+            // v3.8: Shopping list disabled for rebuild
+            // await populateShoppingListFromPlanning();
 
             console.log('Recipe deleted successfully');
         } else {
@@ -808,9 +808,9 @@ async function reloadWeek() {
     await loadPlanning();
     createCalendar();
     displayPlanning();
-    initializeMealInclusions();
-    // v3.1: Reload shopping list for new week
-    await initializeShoppingList();
+    // v3.8: Shopping list disabled for rebuild
+    // initializeMealInclusions();
+    // await initializeShoppingList();
 }
 
 // ===== SERVINGS CONTROL (v3.5) =====
@@ -829,8 +829,8 @@ decreaseServings.addEventListener('click', async () => {
         localStorage.setItem('defaultServings', defaultServings);
         displayPlanning(); // Refresh to show new servings
 
-        // v3.5.1: Régénérer la liste de courses automatiquement
-        await populateShoppingListFromPlanning();
+        // v3.8: Shopping list disabled for rebuild
+        // await populateShoppingListFromPlanning();
     }
 });
 
@@ -842,8 +842,8 @@ increaseServings.addEventListener('click', async () => {
         localStorage.setItem('defaultServings', defaultServings);
         displayPlanning(); // Refresh to show new servings
 
-        // v3.5.1: Régénérer la liste de courses automatiquement
-        await populateShoppingListFromPlanning();
+        // v3.8: Shopping list disabled for rebuild
+        // await populateShoppingListFromPlanning();
     }
 });
 
