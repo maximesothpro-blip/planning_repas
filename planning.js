@@ -459,6 +459,7 @@ async function deleteRecipeFromPlanning(recordId, slot) {
     try {
         // v3.9: Get meal info BEFORE deleting for shopping list update
         const planningItem = planning.find(item => item.id === recordId);
+        console.log('🔍 Planning item found:', planningItem);
         let recipeToRemove = null;
         let servingsToRemove = defaultServings;
 
@@ -466,6 +467,9 @@ async function deleteRecipeFromPlanning(recordId, slot) {
             const recipeId = planningItem.recipe[0];
             recipeToRemove = recipes.find(r => r.id === recipeId);
             servingsToRemove = planningItem.servings || defaultServings;
+            console.log('🔍 Recipe to remove:', recipeToRemove?.name, 'servings:', servingsToRemove);
+        } else {
+            console.log('❌ No planning item or recipe found!');
         }
 
         const response = await fetch(`${API_URL}/api/planning/${recordId}`, {
