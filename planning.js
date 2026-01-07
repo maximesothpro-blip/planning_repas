@@ -457,6 +457,9 @@ async function deleteRecipeFromPlanning(recordId, slot) {
             const day = slot.dataset.day;
             updateDaySummary(day);
 
+            // v3.5.1: Régénérer la liste de courses automatiquement
+            await populateShoppingListFromPlanning();
+
             console.log('Recipe deleted successfully');
         } else {
             alert('Erreur lors de la suppression');
@@ -621,27 +624,33 @@ const increaseServings = document.getElementById('increaseServings');
 servingsInput.value = defaultServings;
 
 // Decrease servings
-decreaseServings.addEventListener('click', () => {
+decreaseServings.addEventListener('click', async () => {
     if (defaultServings > 1) {
         defaultServings--;
         servingsInput.value = defaultServings;
         localStorage.setItem('defaultServings', defaultServings);
         displayPlanning(); // Refresh to show new servings
+
+        // v3.5.1: Régénérer la liste de courses automatiquement
+        await populateShoppingListFromPlanning();
     }
 });
 
 // Increase servings
-increaseServings.addEventListener('click', () => {
+increaseServings.addEventListener('click', async () => {
     if (defaultServings < 20) {
         defaultServings++;
         servingsInput.value = defaultServings;
         localStorage.setItem('defaultServings', defaultServings);
         displayPlanning(); // Refresh to show new servings
+
+        // v3.5.1: Régénérer la liste de courses automatiquement
+        await populateShoppingListFromPlanning();
     }
 });
 
 // Manual input change
-servingsInput.addEventListener('change', () => {
+servingsInput.addEventListener('change', async () => {
     let value = parseInt(servingsInput.value);
     if (isNaN(value) || value < 1) value = 1;
     if (value > 20) value = 20;
@@ -650,6 +659,9 @@ servingsInput.addEventListener('change', () => {
     servingsInput.value = value;
     localStorage.setItem('defaultServings', defaultServings);
     displayPlanning(); // Refresh to show new servings
+
+    // v3.5.1: Régénérer la liste de courses automatiquement
+    await populateShoppingListFromPlanning();
 });
 
 // ===== RECHERCHE DE RECETTES =====
