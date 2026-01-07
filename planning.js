@@ -615,13 +615,19 @@ function setupPopupServingsControl(recipe, recordId) {
             if (data.success) {
                 servingsInput.value = newServings;
 
+                // v3.8: Update planning array in memory (so popup shows correct value on reopen)
+                const planningItem = planning.find(item => item.id === recordId);
+                if (planningItem) {
+                    planningItem.servings = newServings;
+                }
+
                 // Update ingredients display
                 updatePopupIngredients(recipe, newServings);
 
                 // Update planning display to show new servings
                 updateMealServingsDisplay(recordId, newServings);
 
-                console.log(`✅ Servings updated to ${newServings} in Airtable`);
+                console.log(`✅ Servings updated to ${newServings} in Airtable and local cache`);
             } else {
                 console.error('Failed to update servings:', data);
             }
