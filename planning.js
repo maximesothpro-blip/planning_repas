@@ -2467,5 +2467,134 @@ historyPopup.addEventListener('click', (e) => {
     }
 });
 
+// ===== SHOPPING LIST V3.9 - CLEAN RESTART =====
+// Simple shopping list: add ingredients to Airtable, sum if exists, display raw JSON
+
+let currentListId = null; // ID of the current week's shopping list in Airtable
+
+// Get or create shopping list for current week
+async function getOrCreateShoppingList(week, year) {
+    try {
+        console.log(`📋 Getting shopping list for week ${week}-${year}`);
+
+        // Try to find existing list for this week
+        const response = await fetch(`${API_URL}/api/shopping-lists`);
+        const data = await response.json();
+
+        if (data.success) {
+            const existingList = data.shoppingLists.find(list =>
+                list.semaine === week && list.annee === year
+            );
+
+            if (existingList) {
+                console.log(`✓ Found existing list: ${existingList.id}`);
+                currentListId = existingList.id;
+                return existingList;
+            }
+        }
+
+        // Create new list if not found
+        console.log(`✓ Creating new list for week ${week}-${year}`);
+        const createResponse = await fetch(`${API_URL}/api/shopping-list`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                week: week,
+                year: year,
+                ingredients: [],
+                repasInclus: {}
+            })
+        });
+
+        const createData = await createResponse.json();
+        if (createData.success) {
+            currentListId = createData.record.id;
+            console.log(`✓ Created new list: ${currentListId}`);
+            return {
+                id: currentListId,
+                ingredientsJSON: '[]'
+            };
+        }
+
+    } catch (error) {
+        console.error('Error getting/creating shopping list:', error);
+        return null;
+    }
+}
+
+// Add ingredients to shopping list (sum if exists)
+async function addIngredientsToShoppingList(recipe, servings) {
+    try {
+        console.log(`🛒 Adding ingredients for ${recipe.name} (${servings} pers)`);
+
+        // Get or create list for current week
+        const list = await getOrCreateShoppingList(currentWeek, currentYear);
+        if (!list) {
+            console.error('Failed to get/create shopping list');
+            return;
+        }
+
+        // Parse recipe ingredients (multiplied by servings)
+        const newIngredients = parseRecipeIngredients(recipe, servings);
+        console.log(`  → Parsed ${newIngredients.length} ingredients`);
+
+        // Get existing ingredients from list
+        const existingIngredients = JSON.parse(list.ingredientsJSON || '[]');
+        console.log(`  → Existing: ${existingIngredients.length} ingredients`);
+
+        // Merge: sum quantities if ingredient name matches
+        const mergedIngredients = [...existingIngredients];
+
+        newIngredients.forEach(newIng => {
+            const existing = mergedIngredients.find(ing =>
+                ing.name === newIng.name && ing.unit === newIng.unit
+            );
+
+            if (existing) {
+                // Sum quantities
+                existing.quantity += newIng.quantity;
+                console.log(`  ✓ Summed: ${newIng.name} (${existing.quantity}${existing.unit})`);
+            } else {
+                // Add new ingredient
+                mergedIngredients.push(newIng);
+                console.log(`  ✓ Added: ${newIng.name} (${newIng.quantity}${newIng.unit})`);
+            }
+        });
+
+        // Update list in Airtable
+        const updateResponse = await fetch(`${API_URL}/api/shopping-list/${currentListId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                ingredients: mergedIngredients
+            })
+        });
+
+        const updateData = await updateResponse.json();
+        if (updateData.success) {
+            console.log(`✅ Shopping list updated: ${mergedIngredients.length} ingredients`);
+            // Display the updated list
+            displayRawShoppingList(mergedIngredients);
+        }
+
+    } catch (error) {
+        console.error('Error adding ingredients:', error);
+    }
+}
+
+// Display raw JSON in shopping tab
+function displayRawShoppingList(ingredients) {
+    const shoppingContent = document.getElementById('shoppingContent');
+
+    if (!ingredients || ingredients.length === 0) {
+        shoppingContent.innerHTML = '<p>Aucun ingrédient</p>';
+        return;
+    }
+
+    // Display as formatted JSON
+    const jsonString = JSON.stringify(ingredients, null, 2);
+    shoppingContent.innerHTML = `<pre style="font-family: monospace; font-size: 12px; white-space: pre-wrap;">${jsonString}</pre>`;
+}
+
 // ===== DÉMARRAGE =====
 init();
