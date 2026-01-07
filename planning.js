@@ -457,6 +457,17 @@ async function deleteRecipeFromPlanning(recordId, slot) {
     }
 
     try {
+        // v3.9: Get meal info BEFORE deleting for shopping list update
+        const planningItem = planning.find(item => item.id === recordId);
+        let recipeToRemove = null;
+        let servingsToRemove = defaultServings;
+
+        if (planningItem && planningItem.recipe && planningItem.recipe.length > 0) {
+            const recipeId = planningItem.recipe[0];
+            recipeToRemove = recipes.find(r => r.id === recipeId);
+            servingsToRemove = planningItem.servings || defaultServings;
+        }
+
         const response = await fetch(`${API_URL}/api/planning/${recordId}`, {
             method: 'DELETE'
         });
@@ -472,8 +483,10 @@ async function deleteRecipeFromPlanning(recordId, slot) {
             const day = slot.dataset.day;
             updateDaySummary(day);
 
-            // v3.8.1: Regenerate shopping list
-            generateShoppingListSimple();
+            // v3.9: Remove ingredients from shopping list
+            if (recipeToRemove) {
+                await removeIngredientsFromShoppingList(recipeToRemove, servingsToRemove);
+            }
 
             console.log('Recipe deleted successfully');
         } else {
@@ -2658,6 +2671,73 @@ async function updateShoppingListServings(recipe, oldServings, newServings) {
 
     } catch (error) {
         console.error('Error updating shopping list servings:', error);
+    }
+}
+
+// Remove ingredients from shopping list when deleting a meal
+async function removeIngredientsFromShoppingList(recipe, servings) {
+    try {
+        console.log(`🗑️ Removing ingredients for ${recipe.name} (${servings} pers)`);
+
+        // Get current shopping list
+        const list = await getOrCreateShoppingList(currentWeek, currentYear);
+        if (!list) {
+            console.error('Failed to get shopping list');
+            return;
+        }
+
+        // Parse recipe ingredients (multiplied by servings)
+        const ingredientsToRemove = parseRecipeIngredients(recipe, servings);
+        console.log(`  → Removing ${ingredientsToRemove.length} ingredients`);
+
+        // Get existing ingredients from list
+        const existingIngredients = JSON.parse(list.ingredientsJSON || '[]');
+        const updatedIngredients = [];
+
+        // Subtract quantities and filter out ingredients at 0 or below
+        existingIngredients.forEach(existing => {
+            const toRemove = ingredientsToRemove.find(ing =>
+                ing.name === existing.name && ing.unit === existing.unit
+            );
+
+            if (toRemove) {
+                // Subtract quantity
+                const newQuantity = existing.quantity - toRemove.quantity;
+
+                if (newQuantity > 0) {
+                    // Keep ingredient with reduced quantity
+                    updatedIngredients.push({
+                        ...existing,
+                        quantity: newQuantity
+                    });
+                    console.log(`  ➖ ${existing.name}: ${existing.quantity}${existing.unit} → ${newQuantity}${existing.unit}`);
+                } else {
+                    // Remove ingredient (quantity is 0 or negative)
+                    console.log(`  ❌ ${existing.name}: removed (was ${existing.quantity}${existing.unit})`);
+                }
+            } else {
+                // Keep ingredient that's not being removed
+                updatedIngredients.push(existing);
+            }
+        });
+
+        // Update list in Airtable
+        const updateResponse = await fetch(`${API_URL}/api/shopping-list/${currentListId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                ingredients: updatedIngredients
+            })
+        });
+
+        const updateData = await updateResponse.json();
+        if (updateData.success) {
+            console.log(`✅ Shopping list updated after deletion (${updatedIngredients.length} ingredients remaining)`);
+            displayRawShoppingList(updatedIngredients);
+        }
+
+    } catch (error) {
+        console.error('Error removing ingredients:', error);
     }
 }
 
