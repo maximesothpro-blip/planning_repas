@@ -68,6 +68,8 @@ async function init() {
     // v3.8: Shopping list disabled for rebuild
     // await initializeShoppingList();
     // initializeMealInclusions();
+    // v3.9: Load shopping list on startup
+    await loadShoppingListOnStartup();
     setupEventListeners();
     setupTabs();
 }
@@ -2794,6 +2796,28 @@ async function removeIngredientsFromShoppingList(recipe, servings) {
 
     } catch (error) {
         console.error('Error removing ingredients:', error);
+    }
+}
+
+// Load shopping list on page startup
+async function loadShoppingListOnStartup() {
+    try {
+        console.log('📋 Loading shopping list for current week on startup...');
+
+        // Get or create list for current week
+        const list = await getOrCreateShoppingList(currentWeek, currentYear);
+        if (!list) {
+            console.log('No shopping list found');
+            return;
+        }
+
+        // Parse and display ingredients
+        const ingredients = JSON.parse(list.ingredientsJSON || '[]');
+        displayRawShoppingList(ingredients);
+
+        console.log(`✅ Loaded ${ingredients.length} ingredients from Airtable`);
+    } catch (error) {
+        console.error('Error loading shopping list on startup:', error);
     }
 }
 
