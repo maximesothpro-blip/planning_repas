@@ -2624,13 +2624,48 @@ function displayRawShoppingList(ingredients) {
     const shoppingContent = document.getElementById('shoppingContent');
 
     if (!ingredients || ingredients.length === 0) {
-        shoppingContent.innerHTML = '<p>Aucun ingrédient</p>';
+        shoppingContent.innerHTML = '<p class="empty-shopping">Aucun ingrédient dans la liste</p>';
         return;
     }
 
-    // Display as formatted JSON
-    const jsonString = JSON.stringify(ingredients, null, 2);
-    shoppingContent.innerHTML = `<pre style="font-family: monospace; font-size: 12px; white-space: pre-wrap;">${jsonString}</pre>`;
+    // Group by category
+    const byCategory = {};
+    ingredients.forEach(ing => {
+        const cat = ing.category || 'Autres';
+        if (!byCategory[cat]) {
+            byCategory[cat] = [];
+        }
+        byCategory[cat].push(ing);
+    });
+
+    // Sort categories alphabetically
+    const sortedCategories = Object.keys(byCategory).sort();
+
+    // Build HTML
+    let html = '<div class="shopping-list-organized">';
+
+    sortedCategories.forEach(category => {
+        html += `<div class="ingredient-category">`;
+        html += `<h4>${category}</h4>`;
+        html += `<ul class="ingredients-list">`;
+
+        // Sort ingredients by name within category
+        byCategory[category].sort((a, b) => a.name.localeCompare(b.name));
+
+        byCategory[category].forEach(ing => {
+            const quantity = Math.round(ing.quantity * 100) / 100; // 2 decimals
+            html += `<li>`;
+            html += `<span class="ingredient-quantity">${quantity}${ing.unit}</span> `;
+            html += `<span class="ingredient-name">${ing.name}</span>`;
+            html += `</li>`;
+        });
+
+        html += `</ul></div>`;
+    });
+
+    html += '</div>';
+
+    shoppingContent.innerHTML = html;
 }
 
 // Update shopping list when servings change (+/- buttons)
