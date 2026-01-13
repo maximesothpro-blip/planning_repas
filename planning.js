@@ -38,8 +38,9 @@ const prevWeek = document.getElementById('prevWeek');
 const nextWeek = document.getElementById('nextWeek');
 const weekDisplay = document.getElementById('weekDisplay');
 const searchRecipes = document.getElementById('searchRecipes');
-const generateListBtn = document.getElementById('generateList');
-const exportListBtn = document.getElementById('exportList');
+// v3.10: generateListBtn and exportListBtn removed (no longer in HTML)
+// const generateListBtn = document.getElementById('generateList');
+// const exportListBtn = document.getElementById('exportList');
 const clearListBtn = document.getElementById('clearList');
 const shoppingContent = document.getElementById('shoppingContent');
 const settingsBtn = document.getElementById('settingsBtn');
@@ -2039,11 +2040,12 @@ settingsSelectNone.addEventListener('click', () => {
     displaySettingsCalendar();
 });
 
+// v3.10: generateListBtn removed, no longer needed
 // Rafraîchir la liste de courses depuis Airtable
-generateListBtn.addEventListener('click', async () => {
-    console.log('Rafraîchissement de la liste depuis Airtable...');
-    await displayShoppingListFromAirtable();
-});
+// generateListBtn.addEventListener('click', async () => {
+//     console.log('Rafraîchissement de la liste depuis Airtable...');
+//     await displayShoppingListFromAirtable();
+// });
 
 async function generateShoppingList() {
     shoppingList = [];
