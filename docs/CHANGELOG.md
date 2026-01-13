@@ -1,5 +1,38 @@
 # Historique des versions - Planning de Repas
 
+## v3.9.6-beta (2026-01-13)
+### Refonte complète liste de courses
+- **Architecture clean restart** : Code entièrement réécrit pour la liste de courses
+- **Sauvegarde Airtable par semaine** : Une liste de courses par semaine dans Airtable
+- **Ajout/soustraction intelligente** :
+  - Drag & drop → ajoute les ingrédients × servings
+  - Changement servings (+/-) → ajoute/soustrait 1 portion
+  - Suppression repas → soustrait les ingrédients, supprime si quantité = 0
+- **Affichage JSON brut** : Liste affichée en JSON formaté pour debug
+
+### Corrections importantes
+- Fix synchronisation `planning` array en mémoire (ajout/suppression)
+- Fix appels API manquants
+- Suppression anciennes fonctions conflictuelles
+- Logs de debug ajoutés pour traçabilité
+
+### Technique
+- Nouvelles fonctions v3.9 (lignes 2470-2729) :
+  - `getOrCreateShoppingList(week, year)` : Récupère ou crée liste Airtable
+  - `addIngredientsToShoppingList(recipe, servings)` : Ajoute et somme ingrédients
+  - `updateShoppingListServings(recipe, oldServings, newServings)` : +/- 1 portion
+  - `removeIngredientsFromShoppingList(recipe, servings)` : Soustrait et supprime si 0
+  - `displayRawShoppingList(ingredients)` : Affiche JSON
+- Planning array synchronisé après drag & drop et suppression
+- Backend `.env` mis à jour avec nouveau workspace Airtable
+
+### Infrastructure
+- Migration vers nouveau workspace Airtable (limite API dépassée sur l'ancien)
+- Base ID : `appJEGDcsnuU70vJM`
+- Déploiement backend `/var/www/public_html/telegram-bot-api/`
+
+---
+
 ## v3.8.2-beta (2026-01-07)
 ### Nouvelles fonctionnalités
 - **Liste de courses auto-générée** : La liste se régénère automatiquement à chaque modification du planning
