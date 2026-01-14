@@ -2847,22 +2847,65 @@ function displayRecipePreview(recipeData) {
 
     console.log('📄 Processed data:', data);
 
+    // Title
     if (data.title) {
-        html += `<h4>${data.title}</h4>`;
+        html += `<h4 style="color: #6b21a8; margin-bottom: 12px;">${data.title}</h4>`;
     }
 
+    // Description
     if (data.description) {
-        html += `<p><strong>Description:</strong> ${data.description}</p>`;
+        html += `<p style="font-style: italic; color: #666; margin-bottom: 16px;">${data.description}</p>`;
     }
 
+    // Nutritional info
+    if (data.calories || data.proteines || data.glucides || data.lipides) {
+        html += `<div style="background: #faf5ff; padding: 12px; border-radius: 8px; margin-bottom: 16px;">`;
+        html += `<p style="margin: 4px 0;"><strong>📊 Valeurs nutritionnelles :</strong></p>`;
+        html += `<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">`;
+        if (data.calories) html += `<p style="margin: 0;">🔥 ${data.calories} kcal</p>`;
+        if (data.proteines) html += `<p style="margin: 0;">💪 ${data.proteines}g protéines</p>`;
+        if (data.glucides) html += `<p style="margin: 0;">🍞 ${data.glucides}g glucides</p>`;
+        if (data.lipides) html += `<p style="margin: 0;">🥑 ${data.lipides}g lipides</p>`;
+        html += `</div></div>`;
+    }
+
+    // Ingredients (array of objects)
     if (data.ingredients) {
-        html += `<p><strong>Ingrédients:</strong></p>`;
-        html += `<p>${data.ingredients}</p>`;
+        html += `<div style="margin-bottom: 16px;">`;
+        html += `<p style="margin-bottom: 8px;"><strong>🛒 Ingrédients :</strong></p>`;
+
+        if (Array.isArray(data.ingredients)) {
+            html += `<ul style="margin: 0; padding-left: 20px;">`;
+            data.ingredients.forEach(ing => {
+                const quantity = ing.quantite || '';
+                const unit = ing.unite || '';
+                const ingredient = ing.ingredient || '';
+                html += `<li style="margin: 4px 0;">${quantity}${unit} ${ingredient}</li>`;
+            });
+            html += `</ul>`;
+        } else {
+            // Fallback if it's a string
+            html += `<p>${data.ingredients}</p>`;
+        }
+        html += `</div>`;
     }
 
+    // Recipe steps (array of strings)
     if (data.recipe) {
-        html += `<p><strong>Recette:</strong></p>`;
-        html += `<p>${data.recipe}</p>`;
+        html += `<div style="margin-bottom: 16px;">`;
+        html += `<p style="margin-bottom: 8px;"><strong>👨‍🍳 Préparation :</strong></p>`;
+
+        if (Array.isArray(data.recipe)) {
+            html += `<ol style="margin: 0; padding-left: 20px;">`;
+            data.recipe.forEach(step => {
+                html += `<li style="margin: 8px 0; line-height: 1.6;">${step}</li>`;
+            });
+            html += `</ol>`;
+        } else {
+            // Fallback if it's a string
+            html += `<p>${data.recipe}</p>`;
+        }
+        html += `</div>`;
     }
 
     // If no content was added, show debug info
