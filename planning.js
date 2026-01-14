@@ -2816,6 +2816,8 @@ createRecipeForm.addEventListener('submit', async (e) => {
 
         const result = await response.json();
         console.log('✅ n8n response:', result);
+        console.log('✅ n8n response keys:', Object.keys(result));
+        console.log('✅ n8n response stringified:', JSON.stringify(result, null, 2));
 
         // Display preview with n8n response
         displayRecipePreview(result);
@@ -2836,24 +2838,38 @@ createRecipeForm.addEventListener('submit', async (e) => {
 
 // Display recipe preview from n8n response
 function displayRecipePreview(recipeData) {
+    console.log('📄 Displaying recipe preview with data:', recipeData);
+
     let html = '';
 
-    if (recipeData.title) {
-        html += `<h4>${recipeData.title}</h4>`;
+    // Handle different response structures
+    const data = recipeData.success ? recipeData : recipeData;
+
+    console.log('📄 Processed data:', data);
+
+    if (data.title) {
+        html += `<h4>${data.title}</h4>`;
     }
 
-    if (recipeData.description) {
-        html += `<p><strong>Description:</strong> ${recipeData.description}</p>`;
+    if (data.description) {
+        html += `<p><strong>Description:</strong> ${data.description}</p>`;
     }
 
-    if (recipeData.ingredients) {
+    if (data.ingredients) {
         html += `<p><strong>Ingrédients:</strong></p>`;
-        html += `<p>${recipeData.ingredients}</p>`;
+        html += `<p>${data.ingredients}</p>`;
     }
 
-    if (recipeData.recipe) {
+    if (data.recipe) {
         html += `<p><strong>Recette:</strong></p>`;
-        html += `<p>${recipeData.recipe}</p>`;
+        html += `<p>${data.recipe}</p>`;
+    }
+
+    // If no content was added, show debug info
+    if (html === '') {
+        html = `<p style="color: red;"><strong>⚠️ Aucune donnée à afficher</strong></p>`;
+        html += `<p>Structure reçue de n8n :</p>`;
+        html += `<pre style="background: #f5f5f5; padding: 10px; border-radius: 4px; overflow: auto;">${JSON.stringify(recipeData, null, 2)}</pre>`;
     }
 
     recipePreviewContent.innerHTML = html;
