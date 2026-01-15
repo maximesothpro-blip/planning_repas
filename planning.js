@@ -2034,23 +2034,22 @@ async function resetShoppingListToDefault() {
 // Reset button event listener (v3.3)
 resetSettings.addEventListener('click', resetShoppingListToDefault);
 
-// Clear shopping list
-clearListBtn.addEventListener('click', async () => {
-    if (confirm('Voulez-vous vraiment vider la liste de courses ?')) {
-        // Delete from Airtable if exists
-        if (currentShoppingListId) {
-            try {
-                await deleteShoppingListFromAirtable(currentShoppingListId);
-            } catch (error) {
-                console.error('Error deleting from Airtable:', error);
-            }
-        }
-
-        shoppingList = [];
-        currentShoppingListId = null;
-        shoppingContent.innerHTML = '<p class="empty-shopping">La liste a été vidée.</p>';
-    }
-});
+// Clear shopping list (v3.11: Removed, button no longer in UI)
+// clearListBtn.addEventListener('click', async () => {
+//     if (confirm('Voulez-vous vraiment vider la liste de courses ?')) {
+//         // Delete from Airtable if exists
+//         if (currentShoppingListId) {
+//             try {
+//                 await deleteShoppingListFromAirtable(currentShoppingListId);
+//             } catch (error) {
+//                 console.error('Error deleting from Airtable:', error);
+//             }
+//         }
+//         shoppingList = [];
+//         currentShoppingListId = null;
+//         shoppingContent.innerHTML = '<p class="empty-shopping">La liste a été vidée.</p>';
+//     }
+// });
 
 // Week navigation in settings popup
 settingsPrevWeek.addEventListener('click', async () => {

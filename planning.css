@@ -20,11 +20,11 @@ body {
         "recipes recipes";
 }
 
-/* ===== SIDEBAR RECETTES (EN BAS) ===== */
+/* ===== SIDEBAR RECETTES (EN BAS - 1/5 de l'écran) ===== */
 .sidebar {
     grid-area: recipes;
-    height: 300px;
-    min-height: 300px;
+    height: 20vh;
+    min-height: 20vh;
     background: #ffffff;
     border-top: 2px solid #e9d5ff;
     display: flex;
@@ -161,7 +161,7 @@ body {
     grid-area: planning;
     padding: 20px;
     overflow-y: auto;
-    max-height: calc(100vh - 300px); /* Fixed height: total height minus sidebar */
+    max-height: 80vh; /* Fixed height: 1 - 1/5 sidebar = 80% */
 }
 
 .sidebar.collapsed ~ .planning {
@@ -413,7 +413,7 @@ body {
     border-left: 2px solid #e9d5ff;
     display: flex;
     flex-direction: column;
-    max-height: calc(100vh - 300px); /* Fixed height: total height minus sidebar */
+    max-height: 80vh; /* Fixed height: 1 - 1/5 sidebar = 80% */
 }
 
 .sidebar.collapsed ~ .right-sidebar {
