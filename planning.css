@@ -1364,12 +1364,13 @@ body {
     background: white;
     border-radius: 16px;
     padding: 32px;
-    max-width: 600px;
+    max-width: 900px; /* v3.10.3: Enlarged like recipe popup */
     width: 90%;
-    max-height: 90vh;
+    max-height: 85vh;
     overflow-y: auto;
     position: relative;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    border: 2px solid #e9d5ff;
 }
 
 .create-recipe-popup-content h2 {
@@ -1585,4 +1586,94 @@ body {
 .notification-message {
     font-size: 16px;
     font-weight: 600;
+}
+
+/* ===== MODIFY RECIPE POPUP (v3.10.3) ===== */
+.modify-recipe-popup {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modify-recipe-popup.active {
+    display: flex;
+}
+
+.modify-recipe-popup-content {
+    background: white;
+    border-radius: 16px;
+    padding: 32px;
+    max-width: 900px;
+    width: 90%;
+    max-height: 85vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    border: 2px solid #e9d5ff;
+}
+
+.modify-recipe-popup-content h2 {
+    color: #6b21a8;
+    margin-bottom: 24px;
+    font-size: 24px;
+}
+
+.modify-recipe-form .form-group {
+    margin-bottom: 20px;
+}
+
+.modify-recipe-form label {
+    display: block;
+    margin-bottom: 8px;
+    color: #6b21a8;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.modify-recipe-form input,
+.modify-recipe-form textarea {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e9d5ff;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    transition: border-color 0.2s;
+}
+
+.modify-recipe-form input:focus,
+.modify-recipe-form textarea:focus {
+    outline: none;
+    border-color: #a78bfa;
+}
+
+.modify-recipe-form textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.modify-recipe-submit-btn {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+    border: none;
+    padding: 12px 32px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    width: 100%;
+    transition: all 0.2s;
+    margin-top: 8px;
+}
+
+.modify-recipe-submit-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
 }

@@ -1,5 +1,35 @@
 # Historique des versions - Planning de Repas
 
+## v3.10.3-beta (2026-01-14)
+### Nouvelle fonctionnalité : Modification de recette
+- **Popup de modification agrandie** : Popup de création recette élargie à 900px (comme les autres popups)
+- **Bouton "Modifier"** : Permet de modifier la recette avant de l'accepter
+- **Formulaire de modification** : 5 champs pré-remplis avec données actuelles
+  - **Remarque** : Champ libre pour indiquer les modifications souhaitées
+  - **Titre** : Pré-rempli avec le titre actuel
+  - **Description** : Pré-remplie
+  - **Ingrédients** : Pré-remplis (convertis de array à texte)
+  - **Recette** : Pré-remplie (étapes converties à texte)
+- **Workflow complet** : Modifier → Loading → Affichage recette modifiée → Accepter ou modifier à nouveau
+- **Notification** : Message "Recette modifiée avec succès !" après modification
+- **Bouton orange** : Bouton "Modifier recette" avec dégradé orange pour le distinguer
+
+### Modifications techniques
+- **Backend** : Nouvelle route `/api/modify-recipe` qui appelle le webhook n8n `modifie-recepie`
+- **Frontend** :
+  - Nouvelle popup `modify-recipe-popup` avec formulaire 5 champs
+  - CSS dédié avec bouton orange gradient (#f59e0b → #d97706)
+  - JavaScript handlers : ouverture popup, pré-remplissage, soumission, loading
+  - Mise à jour de `currentRecipeData` après modification
+  - Affichage automatique de la recette modifiée dans le preview
+- **Conversion array→text** : Les arrays ingredients/recipe sont convertis en texte (join '\n') pour édition
+
+### Déploiement requis
+- ⚠️ **Backend doit être redéployé** avec le nouveau `server.js`
+- Frontend déjà déployé sur GitHub Pages
+
+---
+
 ## v3.10.2-beta (2026-01-13)
 ### Nouvelle fonctionnalité : Bouton Accepter recette
 - **Bouton "Accepter"** : Enregistrement de la recette via n8n

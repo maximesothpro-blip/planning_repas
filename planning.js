@@ -42,6 +42,10 @@ const recipePreview = document.getElementById('recipePreview');
 const recipePreviewContent = document.getElementById('recipePreviewContent');
 const recipeModifyBtn = document.getElementById('recipeModifyBtn');
 const recipeAcceptBtn = document.getElementById('recipeAcceptBtn');
+const modifyRecipePopup = document.getElementById('modifyRecipePopup');
+const closeModifyRecipePopup = document.getElementById('closeModifyRecipePopup');
+const modifyRecipeForm = document.getElementById('modifyRecipeForm');
+const modifyLoading = document.getElementById('modifyLoading');
 const notificationPopup = document.getElementById('notificationPopup');
 const notificationMessage = document.getElementById('notificationMessage');
 const prevWeek = document.getElementById('prevWeek');
@@ -2926,15 +2930,38 @@ function displayRecipePreview(recipeData) {
     recipePreviewContent.innerHTML = html;
 }
 
-// Modify button - go back to form
+// Modify button - open modify popup with pre-filled data (v3.10.3)
 recipeModifyBtn.addEventListener('click', () => {
-    // Show form, hide preview and loading
-    createRecipeForm.style.display = 'block';
-    recipePreview.style.display = 'none';
-    recipeLoading.style.display = 'none';
+    if (!currentRecipeData) {
+        console.error('No recipe data to modify');
+        return;
+    }
 
-    // Clear stored recipe data
-    currentRecipeData = null;
+    console.log('🔧 Opening modify popup with data:', currentRecipeData);
+
+    // Pre-fill form fields with current recipe data
+    document.getElementById('modifyTitle').value = currentRecipeData.title || '';
+    document.getElementById('modifyDescription').value = currentRecipeData.description || '';
+
+    // Convert ingredients array to text format
+    if (Array.isArray(currentRecipeData.ingredients)) {
+        document.getElementById('modifyIngredients').value = currentRecipeData.ingredients.join('\n');
+    } else {
+        document.getElementById('modifyIngredients').value = currentRecipeData.ingredients || '';
+    }
+
+    // Convert recipe steps array to text format
+    if (Array.isArray(currentRecipeData.recipe)) {
+        document.getElementById('modifySteps').value = currentRecipeData.recipe.join('\n');
+    } else {
+        document.getElementById('modifySteps').value = currentRecipeData.recipe || '';
+    }
+
+    // Clear remark field
+    document.getElementById('modifyRemark').value = '';
+
+    // Show modify popup
+    modifyRecipePopup.classList.add('active');
 });
 
 // Accept button - save recipe and close
@@ -3012,6 +3039,89 @@ function showNotification(message, type = 'success') {
         notificationPopup.classList.remove('show');
     }, 3000);
 }
+
+// ===== MODIFY RECIPE POPUP HANDLERS (v3.10.3) =====
+
+// Close modify recipe popup
+closeModifyRecipePopup.addEventListener('click', () => {
+    modifyRecipePopup.classList.remove('active');
+});
+
+// Close on outside click
+modifyRecipePopup.addEventListener('click', (e) => {
+    if (e.target === modifyRecipePopup) {
+        modifyRecipePopup.classList.remove('active');
+    }
+});
+
+// Handle modify recipe form submission
+modifyRecipeForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    console.log('🔧 Modifying recipe...');
+
+    // Get form data
+    const formData = new FormData(modifyRecipeForm);
+    const remark = formData.get('remark');
+    const title = formData.get('title');
+    const description = formData.get('description');
+    const ingredients = formData.get('ingredients');
+    const recipe = formData.get('recipe');
+
+    console.log('📝 Modification data:', { remark, title, description, ingredients, recipe });
+
+    try {
+        // Hide form, show loading
+        modifyRecipeForm.style.display = 'none';
+        modifyLoading.style.display = 'flex';
+
+        // Call backend to modify recipe
+        const response = await fetch(`${API_URL}/api/modify-recipe`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                remark,
+                title,
+                description,
+                ingredients,
+                recipe
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        console.log('✅ Recipe modified successfully:', result);
+
+        // Update currentRecipeData with modified recipe
+        currentRecipeData = result;
+
+        // Hide loading, close modify popup
+        modifyLoading.style.display = 'none';
+        modifyRecipeForm.style.display = 'block';
+        modifyRecipePopup.classList.remove('active');
+
+        // Update preview with modified recipe data
+        displayRecipePreview(result);
+
+        // Show success notification
+        showNotification('Recette modifiée avec succès !');
+
+    } catch (error) {
+        console.error('❌ Error modifying recipe:', error);
+
+        // Hide loading, show form again
+        modifyLoading.style.display = 'none';
+        modifyRecipeForm.style.display = 'block';
+
+        // Show error notification
+        showNotification('Erreur lors de la modification', 'error');
+    }
+});
 
 // ===== DÉMARRAGE =====
 init();

@@ -181,6 +181,49 @@
         </div>
     </div>
 
+    <!-- Popup Modification de recette -->
+    <div class="modify-recipe-popup" id="modifyRecipePopup">
+        <div class="modify-recipe-popup-content">
+            <button class="close-popup" id="closeModifyRecipePopup">×</button>
+            <h2>Modifier la recette</h2>
+            <form id="modifyRecipeForm" class="modify-recipe-form">
+                <div class="form-group">
+                    <label for="modifyRemark">Remarque</label>
+                    <textarea id="modifyRemark" name="remark" rows="3" placeholder="Ajoutez vos remarques ou modifications souhaitées..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="modifyTitle">Titre</label>
+                    <input type="text" id="modifyTitle" name="title" required placeholder="Nom de la recette">
+                </div>
+
+                <div class="form-group">
+                    <label for="modifyDescription">Description</label>
+                    <textarea id="modifyDescription" name="description" rows="3" placeholder="Courte description de la recette"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="modifyIngredients">Ingrédients</label>
+                    <textarea id="modifyIngredients" name="ingredients" rows="8" required placeholder="Liste des ingrédients"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="modifySteps">Recette</label>
+                    <textarea id="modifySteps" name="recipe" rows="8" required placeholder="Étapes de préparation"></textarea>
+                </div>
+
+                <button type="submit" class="modify-recipe-submit-btn">Modifier recette</button>
+            </form>
+
+            <!-- Section de chargement -->
+            <div id="modifyLoading" class="recipe-loading" style="display: none;">
+                <div class="loading-spinner"></div>
+                <p>Modification de la recette en cours...</p>
+                <p class="loading-subtext">n8n traite votre demande, veuillez patienter.</p>
+            </div>
+        </div>
+    </div>
+
     <!-- Notification popup -->
     <div class="notification-popup" id="notificationPopup">
         <div class="notification-content">
@@ -190,7 +233,7 @@
     </div>
 
     <!-- Version -->
-    <div class="version-info">v3.10.2-beta</div>
+    <div class="version-info">v3.10.3-beta</div>
 
     <script src="config.js"></script>
     <script src="planning.js"></script>
