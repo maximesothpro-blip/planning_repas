@@ -2890,10 +2890,11 @@ function displayRecipePreview(recipeData) {
         if (Array.isArray(data.ingredients)) {
             html += `<ul style="margin: 0; padding-left: 20px;">`;
             data.ingredients.forEach(ing => {
-                const quantity = ing.quantite || '';
-                const unit = ing.unite || '';
-                const ingredient = ing.ingredient || '';
-                html += `<li style="margin: 4px 0;">${quantity}${unit} ${ingredient}</li>`;
+                const quantity = ing.quantite || ing.quantity || '';
+                const unit = ing.unite || ing.unit || '';
+                const ingredient = ing.ingredient || ing.name || '';
+                // Add space between quantity and unit: "200 g de farine"
+                html += `<li style="margin: 4px 0;">${quantity} ${unit} ${ingredient}</li>`;
             });
             html += `</ul>`;
         } else {
@@ -2948,9 +2949,13 @@ recipeModifyBtn.addEventListener('click', () => {
     if (Array.isArray(currentRecipeData.ingredients)) {
         const ingredientsText = currentRecipeData.ingredients.map(ing => {
             if (typeof ing === 'string') return ing;
+            // Handle both formats: {quantity, unit, name} and {quantite, unite, ingredient}
+            const quantity = ing.quantity || ing.quantite;
+            const unit = ing.unit || ing.unite;
+            const name = ing.name || ing.ingredient;
             // Format: "200 g de farine" with space between quantity and unit
-            const quantityStr = ing.quantity % 1 === 0 ? ing.quantity : ing.quantity.toFixed(1);
-            return `${quantityStr} ${ing.unit} de ${ing.name}`;
+            const quantityStr = quantity % 1 === 0 ? quantity : quantity.toFixed(1);
+            return `${quantityStr} ${unit} de ${name}`;
         }).join('\n');
         document.getElementById('modifyIngredients').value = ingredientsText;
     } else {
