@@ -55,9 +55,10 @@ const searchRecipes = document.getElementById('searchRecipes');
 // v3.10: generateListBtn and exportListBtn removed (no longer in HTML)
 // const generateListBtn = document.getElementById('generateList');
 // const exportListBtn = document.getElementById('exportList');
-const clearListBtn = document.getElementById('clearList');
+// v3.11: clearListBtn and settingsBtn removed (no longer needed)
+// const clearListBtn = document.getElementById('clearList');
 const shoppingContent = document.getElementById('shoppingContent');
-const settingsBtn = document.getElementById('settingsBtn');
+// const settingsBtn = document.getElementById('settingsBtn');
 const shoppingSettingsPopup = document.getElementById('shoppingSettingsPopup');
 const closeSettingsPopup = document.getElementById('closeSettingsPopup');
 const settingsCalendar = document.getElementById('settingsCalendar');
@@ -1508,13 +1509,13 @@ function initializeMealInclusions() {
     });
 }
 
-// Open settings popup
-settingsBtn.addEventListener('click', () => {
-    settingsWeek = currentWeek;
-    settingsYear = currentYear;
-    initializeSettingsPopup();
-    shoppingSettingsPopup.classList.add('active');
-});
+// Open settings popup (v3.11: Removed, button no longer in UI)
+// settingsBtn.addEventListener('click', () => {
+//     settingsWeek = currentWeek;
+//     settingsYear = currentYear;
+//     initializeSettingsPopup();
+//     shoppingSettingsPopup.classList.add('active');
+// });
 
 // Close settings popup
 closeSettingsPopup.addEventListener('click', () => {

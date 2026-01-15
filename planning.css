@@ -408,7 +408,7 @@ body {
 /* ===== RIGHT SIDEBAR (Bot & Shopping) ===== */
 .right-sidebar {
     grid-area: shopping;
-    width: 350px;
+    width: 260px;
     background: white;
     border-left: 2px solid #e9d5ff;
     display: flex;
